@@ -1,11 +1,14 @@
-<?php 
+<?php
 
 namespace App\Service\Master;
 
 use App\Contract\Master\ClassRoomContract;
 use App\Models\ClassRoom;
+use App\Models\ClassRoomUser;
 use App\Service\BaseService;
+use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class ClassRoomService extends BaseService implements ClassRoomContract
 {
@@ -14,5 +17,33 @@ class ClassRoomService extends BaseService implements ClassRoomContract
     public function __construct(ClassRoom $model)
     {
         $this->model = $model;
+    }
+
+    public function create($payloads)
+    {
+
+        $members = $payloads['members'];
+        unset($payloads['members']);
+
+        try {
+            DB::beginTransaction();
+            $model = $this->model->create($payloads);
+
+            $members = collect($members)->map(function ($member) use ($model) {
+                return [
+                    'user_id' => $member['value'],
+                    'class_room_id' => $model->id,
+                ];
+            });
+
+            ClassRoomUser::insert($members->toArray());
+
+            DB::commit();
+
+            return $model->fresh();
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $e;
+        }
     }
 }

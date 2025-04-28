@@ -42,7 +42,6 @@ class ClassRoomController extends Controller
     public function store(ClassRoomRequest $request)
     {
         $payload = $request->validated();
-        unset($payload['members']);
         $data = $this->service->create($payload);
         return WebResponse::response($data, 'master.classroom.index');
     }

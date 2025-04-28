@@ -1,10 +1,12 @@
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
 import { Role } from './role';
+import { ClassRoom } from './classroom';
 
 export interface Auth {
     user: User;
     role?: string | null;
+    classroom?: ClassRoom;
 }
 
 export interface BreadcrumbItem {

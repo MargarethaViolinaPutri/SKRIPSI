@@ -48,4 +48,37 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the classrooms where this user is a teacher.
+     */
+    public function classRooms()
+    {
+        return $this->belongsToMany(ClassRoom::class, 'class_room_users')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all classroom memberships for this user.
+     */
+    public function classRoomUsers()
+    {
+        return $this->hasMany(ClassRoomUser::class);
+    }
+
+    /**
+     * Get the latest classroom membership for this user.
+     */
+    public function latestClassRoomUser()
+    {
+        return $this->hasOne(ClassRoomUser::class)->latest();
+    }
+
+    /**
+     * Get the latest classroom this user is a member of.
+     */
+    public function latestClassRoom()
+    {
+        return $this->latestClassRoomUser()->with('classRoom');
+    }
 }

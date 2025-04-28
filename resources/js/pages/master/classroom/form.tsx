@@ -59,7 +59,7 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
                 <InputError message={errors?.level} />
             </div>
             <div className="col-span-12 flex flex-col gap-1.5">
-                <Label>Members</Label>
+                <Label>Students</Label>
                 <MultiSelect
                     placeholder="Members"
                     name="members"

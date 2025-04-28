@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'role' => $request->user() ? ($request->user()->roles->pluck('name')[0] ?? null) : null,
+                'classroom' => $request->user() ? $request->user()->classRooms()->latest()->first() : null,
             ],
             'ziggy' => fn(): array => [
                 ...(new Ziggy)->toArray(),
