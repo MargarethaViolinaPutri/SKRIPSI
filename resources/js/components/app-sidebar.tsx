@@ -1,8 +1,8 @@
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { SharedData, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { LayoutGrid, Ruler, Settings } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -65,7 +65,17 @@ const setting: NavItem = {
 };
 
 export function AppSidebar() {
-    const navigation = [master, operational, setting];
+    const { role } = usePage<SharedData>().props.auth;
+
+    let navigation = [];
+
+    if (role === 'admin') {
+        navigation = [master, setting];
+    } else if (role === 'teacher') {
+        navigation = [master, operational];
+    } else if (role === 'student') {
+        navigation = [operational];
+    }
 
     return (
         <Sidebar collapsible="icon" variant="sidebar">

@@ -4,6 +4,7 @@ import { Role } from './role';
 
 export interface Auth {
     user: User;
+    role?: string | null;
 }
 
 export interface BreadcrumbItem {
