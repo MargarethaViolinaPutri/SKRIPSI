@@ -41,7 +41,10 @@ class ModuleController extends Controller
 
     public function store(ModuleRequest $request)
     {
-        $data = $this->service->create($request->validated());
+        $payload = $request->validated();
+        unset($payload['file']);
+
+        $data = $this->service->create($payload);
         return WebResponse::response($data, 'master.module.index');
     }
 

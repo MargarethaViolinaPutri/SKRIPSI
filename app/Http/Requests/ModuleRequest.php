@@ -25,6 +25,7 @@ class ModuleRequest extends FormRequest
             "course_id" => "required|integer|exists:courses,id",
             "name" => "required|string|max:255",
             "desc" => "required|string",
+            "file" => "required|file|mimes:pdf|max:10024",
         ];
     }
 }

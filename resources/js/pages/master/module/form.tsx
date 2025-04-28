@@ -1,6 +1,7 @@
 import InputError from '@/components/input-error';
 import { MultiSelect } from '@/components/multi-select';
 import { Button } from '@/components/ui/button';
+import { FileUpload } from '@/components/ui/file-upload';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,7 +18,7 @@ type ModuleFormProps = {
 };
 
 export default function ModuleForm({ module }: ModuleFormProps) {
-    const { data, setData, post, put, errors, processing } = useForm<Module>(module);
+    const { data, setData, post, put, errors, processing } = useForm<any>(module);
 
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -36,7 +37,7 @@ export default function ModuleForm({ module }: ModuleFormProps) {
                 <MultiSelect
                     placeholder="Course"
                     name="course_id"
-                    defaultValue={{value: data.course_id, label: data.course?.name}}
+                    defaultValue={{ value: data.course_id, label: data.course?.name }}
                     onChange={(v) => setData('course_id', v.value)}
                     loadOptions={fetchCourse}
                 />
@@ -50,6 +51,11 @@ export default function ModuleForm({ module }: ModuleFormProps) {
             <div className="col-span-12 flex flex-col gap-1.5">
                 <Label>Description</Label>
                 <Textarea placeholder="Description" value={data.desc} onChange={(v) => setData('desc', v.currentTarget.value)} />
+                <InputError message={errors?.desc} />
+            </div>
+            <div className="col-span-12 flex flex-col gap-1.5">
+                <Label>File</Label>
+                <FileUpload accept="application/pdf" onFilesChange={(v) => setData('file', v)} />
                 <InputError message={errors?.desc} />
             </div>
             <div className="col-span-12">

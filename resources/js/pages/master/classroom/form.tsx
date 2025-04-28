@@ -29,10 +29,6 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        // data.members = data.members.map((v) => v);
-
-        console.log(data.members);
-
         if (classroom) {
             put(route('master.classroom.update', classroom.id), FormResponse);
         } else {
