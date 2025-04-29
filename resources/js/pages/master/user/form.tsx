@@ -15,16 +15,8 @@ type UserFormProps = {
     user?: User;
 };
 
-type UserFormData = {
-    name: string;
-    email: string;
-    role: string;
-    password: string;
-    password_confirmation: string;
-};
-
 export default function UserForm({ user }: UserFormProps) {
-    const { data, setData, post, put, errors, processing } = useForm<UserFormData>({
+    const { data, setData, post, put, errors, processing } = useForm<any>({
         name: user?.name,
         email: user?.email,
         role: user?.roles[0].name ?? '',
