@@ -43,7 +43,7 @@ const operational: NavItem = {
         {
             title: 'LMS',
             icon: Ruler,
-            href: '/dashboard',
+            href: route('operational.lms.index'),
         },
     ],
 };
