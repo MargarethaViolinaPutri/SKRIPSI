@@ -1,23 +1,36 @@
 import NextTable from '@/components/next-table';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogDescription, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import { Base } from '@/types/base';
 import { Question } from '@/types/question';
-import { Link } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { Eye, Pencil, Plus, Trash } from 'lucide-react';
-import { ReactNode } from 'react';
+import { FormEvent, ReactNode, useCallback, useState } from 'react';
 
 export default function QuestionIndex() {
+    const { processing, delete: destroy } = useForm();
+    const [id, setId] = useState<any>(null);
+
     const load = async (params: Record<string, unknown>) => {
         const response = await axios.get<Base<Question[]>>(route('master.question.fetch', params));
         return response.data;
     };
 
     const helper = createColumnHelper<Question>();
+
+    const onDelete = (e: FormEvent, id: any) => {
+        e.preventDefault();
+        destroy(route('master.question.destroy', { id: id }));
+    };
+
+    const handleDelete = useCallback((questionId: any) => {
+        setId(questionId);
+    }, []);
 
     const columns: ColumnDef<Question, any>[] = [
         helper.accessor('id', {
@@ -50,7 +63,7 @@ export default function QuestionIndex() {
             enableColumnFilter: false,
             enableHiding: false,
             enablePinning: true,
-            cell: () => {
+            cell: ({ row }) => {
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -65,7 +78,7 @@ export default function QuestionIndex() {
                             <DropdownMenuItem>
                                 <Pencil /> Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
                                 <Trash /> Delete
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -80,6 +93,24 @@ export default function QuestionIndex() {
 
     return (
         <div>
+            <Dialog open={id != null} onOpenChange={(open) => !open && setId(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Question</DialogTitle>
+                        <DialogDescription>Are you sure you want to delete this question? This action cannot be undone.</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <form onSubmit={(e) => onDelete(e, id)}>
+                            <Button variant="outline" onClick={() => setId(null)}>
+                                Cancel
+                            </Button>
+                            <Button variant="destructive" type="submit">
+                                Delete
+                            </Button>
+                        </form>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <div className="flex flex-row items-center justify-between">
                 <div>
                     <h1 className="text-lg font-medium">Question</h1>
