@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'prefix' => 'operational',
     'as' => 'operational.',
+    'middleware' => ['auth'],
 ], function () {
 
     Route::group([

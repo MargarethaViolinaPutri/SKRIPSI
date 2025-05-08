@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Service\Master;
 
@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class ModuleService extends BaseService implements ModuleContract
 {
     protected Model $model;
-    protected array $fileKeys = ['file'];
+    protected array $fileKeys = ['materials'];
 
     public function __construct(Module $model)
     {

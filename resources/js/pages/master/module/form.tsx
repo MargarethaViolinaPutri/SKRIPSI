@@ -55,8 +55,8 @@ export default function ModuleForm({ module }: ModuleFormProps) {
             </div>
             <div className="col-span-12 flex flex-col gap-1.5">
                 <Label>File</Label>
-                <FileUpload accept="application/pdf" onFilesChange={(v) => setData('file', v)} />
-                <InputError message={errors?.desc} />
+                <FileUpload multiple={true} accept="application/pdf" onFilesChange={(v) => setData('materials', v)} />
+                <InputError message={errors?.materials} />
             </div>
             <div className="col-span-12">
                 <Button disabled={processing}>

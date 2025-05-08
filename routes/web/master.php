@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'prefix' => 'master',
     'as' => 'master.',
+    'middleware' => ['auth'],
 ], function () {
 
     Route::group([

@@ -17,12 +17,12 @@ class Module extends Model implements HasMedia
     protected $guarded  = [];
 
     protected $appends = [
-        'file',
+        'materials',
     ];
 
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('file');
+        $this->addMediaCollection('materials');
     }
 
     public function course()
@@ -30,8 +30,8 @@ class Module extends Model implements HasMedia
         return $this->belongsTo(Course::class);
     }
 
-    public function getFileAttribute()
+    public function getMaterialsAttribute()
     {
-        return $this->getMedia('file')->last();
+        return $this->getMedia('materials');
     }
 }

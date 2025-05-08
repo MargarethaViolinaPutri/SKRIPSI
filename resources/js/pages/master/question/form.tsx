@@ -65,7 +65,7 @@ export default function QuestionForm({ question }: QuestionFormProps) {
                 />
                 <InputError message={errors?.code} />
             </div>
-            <div className="col-span-12 flex flex-col gap-1.5">
+            {/* <div className="col-span-12 flex flex-col gap-1.5">
                 <Label>Unit Test</Label>
                 <Editor
                     className="border"
@@ -76,7 +76,7 @@ export default function QuestionForm({ question }: QuestionFormProps) {
                     height="200px"
                 />
                 <InputError message={errors?.desc} />
-            </div>
+            </div> */}
             <div className="col-span-12">
                 <Button disabled={processing}>
                     {processing && <Loader className="mr-2 animate-spin" />}

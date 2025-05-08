@@ -17,11 +17,9 @@ class QuestionSeeder extends Seeder
         $questions = [
             [
                 "module_id" => 1,
-                "order" => 1,
                 "name" => "Hello World",
                 "desc" => "Hello World",
                 "code" => "print('Hello World')",
-                "test" => "print('Hello World')",
             ],
         ];
 
