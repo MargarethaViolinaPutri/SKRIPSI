@@ -55,7 +55,13 @@ class CourseController extends Controller
 
     public function update(CourseRequest $request, $id)
     {
-        $data = $this->service->update($id, $request->validated());
+        $payload = $request->validated();
+        $data = $this->service->update(
+            [
+                ['id', '=', $id],
+            ],
+            $payload
+        );
         return WebResponse::response($data, 'master.course.index');
     }
 

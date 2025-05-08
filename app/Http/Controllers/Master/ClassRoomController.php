@@ -48,15 +48,21 @@ class ClassRoomController extends Controller
 
     public function show($id)
     {
-        $data = $this->service->find($id);
-        return Inertia::render('master/classroom/form', [
+        $data = $this->service->find($id, relation: ['members', 'teacher']);
+        return Inertia::render('master/classroom/detail', [
             "classroom" => $data
         ]);
     }
 
     public function update(ClassRoomRequest $request, $id)
     {
-        $data = $this->service->update($id, $request->validated());
+        $payload = $request->validated();
+        $data = $this->service->update(
+            [
+                ['id', '=', $id],
+            ],
+            $payload
+        );
         return WebResponse::response($data, 'master.classroom.index');
     }
 

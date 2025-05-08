@@ -50,7 +50,7 @@ class ModuleController extends Controller
 
     public function show($id)
     {
-        $data = $this->service->find($id);
+        $data = $this->service->find($id, relation: ['course']);
         return Inertia::render('master/module/form', [
             "module" => $data
         ]);
@@ -58,7 +58,13 @@ class ModuleController extends Controller
 
     public function update(ModuleRequest $request, $id)
     {
-        $data = $this->service->update($id, $request->validated());
+        $payload = $request->validated();
+        $data = $this->service->update(
+            [
+                ['id', '=', $id],
+            ],
+            $payload
+        );
         return WebResponse::response($data, 'master.module.index');
     }
 

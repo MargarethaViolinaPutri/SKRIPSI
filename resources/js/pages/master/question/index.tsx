@@ -1,6 +1,6 @@
 import NextTable from '@/components/next-table';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogDescription, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import { Base } from '@/types/base';
@@ -9,7 +9,7 @@ import { Link, useForm } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
-import { Eye, Pencil, Plus, Trash } from 'lucide-react';
+import { Eye, Plus, Trash } from 'lucide-react';
 import { FormEvent, ReactNode, useCallback, useState } from 'react';
 
 export default function QuestionIndex() {
@@ -72,12 +72,11 @@ export default function QuestionIndex() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="center">
-                            <DropdownMenuItem>
-                                <Eye /> Detail
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <Pencil /> Edit
-                            </DropdownMenuItem>
+                            <Link href={route('master.question.show', { id: row.original.id })}>
+                                <DropdownMenuItem>
+                                    <Eye /> Detail
+                                </DropdownMenuItem>
+                            </Link>
                             <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
                                 <Trash /> Delete
                             </DropdownMenuItem>

@@ -8,7 +8,7 @@ import { ClassRoom } from '@/types/classroom';
 import { Link, useForm } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { Eye, Pencil, Plus, Trash } from 'lucide-react';
+import { Eye, Plus, Trash } from 'lucide-react';
 import { FormEvent, ReactNode, useCallback, useState } from 'react';
 
 export default function ClassRoomIndex() {
@@ -65,12 +65,11 @@ export default function ClassRoomIndex() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="center">
-                            <DropdownMenuItem>
-                                <Eye /> Detail
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                                <Pencil /> Edit
-                            </DropdownMenuItem>
+                            <Link href={route('master.classroom.show', { id: row.original.id })}>
+                                <DropdownMenuItem>
+                                    <Eye /> Detail
+                                </DropdownMenuItem>
+                            </Link>
                             <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
                                 <Trash /> Delete
                             </DropdownMenuItem>

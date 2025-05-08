@@ -11,7 +11,7 @@ import { Link, useForm } from '@inertiajs/react';
 import { type ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
-import { Eye, Pencil, Plus, Trash } from 'lucide-react';
+import { Eye, Plus, Trash } from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useMemo, useState } from 'react';
 
 export default function CourseIndex() {
@@ -69,12 +69,11 @@ export default function CourseIndex() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="center">
-                                <DropdownMenuItem>
-                                    <Eye /> Detail
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Pencil /> Edit
-                                </DropdownMenuItem>
+                                <Link href={route('master.course.show', { id: row.original.id })}>
+                                    <DropdownMenuItem>
+                                        <Eye /> Detail
+                                    </DropdownMenuItem>
+                                </Link>
                                 <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
                                     <Trash /> Delete
                                 </DropdownMenuItem>

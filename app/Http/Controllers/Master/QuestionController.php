@@ -55,7 +55,13 @@ class QuestionController extends Controller
 
     public function update(QuestionRequest $request, $id)
     {
-        $data = $this->service->update($id, $request->validated());
+        $payload = $request->validated();
+        $data = $this->service->update(
+            [
+                ['id', '=', $id],
+            ],
+            $payload
+        );
         return WebResponse::response($data, 'master.question.index');
     }
 

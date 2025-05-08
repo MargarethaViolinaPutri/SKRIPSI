@@ -6,6 +6,7 @@ use App\Contract\Master\UserContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserRequest;
 use App\Utils\WebResponse;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
 class UserController extends Controller
@@ -48,7 +49,7 @@ class UserController extends Controller
 
     public function show($id)
     {
-        $data = $this->service->find($id);
+        $data = $this->service->find($id, relation: ['roles']);
         return Inertia::render('master/user/form', [
             "user" => $data
         ]);
@@ -56,7 +57,18 @@ class UserController extends Controller
 
     public function update(UserRequest $request, $id)
     {
-        $data = $this->service->update($id, $request->validated());
+        $payload = $request->validated();
+
+        unset($payload['password_confirmation']);
+
+        $payload['password'] = Hash::make($payload['password']);
+
+        $data = $this->service->update(
+            [
+                ['id', '=', $id],
+            ],
+            $payload
+        );
         return WebResponse::response($data, 'master.user.index');
     }
 
