@@ -61,9 +61,14 @@ Route::group([
         Route::get('fetch', [QuestionController::class, 'fetch'])->name('fetch');
         Route::get('{id}', [QuestionController::class, 'show'])->name('show');
         Route::post('', [QuestionController::class, 'store'])->name('store');
+
+        // ✅ Add this line below:
+        Route::post('store-fib', [QuestionController::class, 'storeFIB'])->name('store.fib');
+
         Route::put('{id}', [QuestionController::class, 'update'])->name('update');
         Route::delete('{id}', [QuestionController::class, 'destroy'])->name('destroy');
     });
+
 
     Route::group([
         'prefix' => 'user',

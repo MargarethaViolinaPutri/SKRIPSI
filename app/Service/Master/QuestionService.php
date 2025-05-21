@@ -15,4 +15,20 @@ class QuestionService extends BaseService implements QuestionContract
     {
         $this->model = $model;
     }
+
+    public function createMultiple(array $base, array $questions)
+    {
+        foreach ($questions as $q) {
+            $this->create([
+                'module_id' => $base['module_id'],
+                'name' => $base['name'] . ' - Soal ' . $q['question_number'],
+                'desc' => $q['narasi'],
+                'code' => $q['kode_blank'],
+                'test' => $q['kode_utuh'],
+            ]);
+        }
+
+        return true;
+    }
+
 }

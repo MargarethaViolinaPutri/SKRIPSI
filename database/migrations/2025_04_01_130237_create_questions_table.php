@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('desc');
             $table->text('code');
+            $table->text('test');
             $table->timestamps();
         });
     }
