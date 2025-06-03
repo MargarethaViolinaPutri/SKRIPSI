@@ -23,12 +23,46 @@ class QuestionService extends BaseService implements QuestionContract
                 'module_id' => $base['module_id'],
                 'name' => $base['name'] . ' - Soal ' . $q['question_number'],
                 'desc' => $q['narasi'],
-                'code' => $q['kode_blank'],
-                'test' => $q['kode_utuh'],
+                'code' => $q['kode_utuh'],
+                'test' => $q['kode_blank'],
             ]);
         }
 
         return true;
     }
+    /**
+     * Retrieve a group of questions based on a base question ID.
+     *
+     * @param int $id
+     * @return array
+     */
+    public function getGroupedQuestionsById(int $id): array
+    {
+        $baseQuestion = $this->model->findOrFail($id);
 
+        // Here we assume the 'name' field uses a consistent base name with suffixes like ' - Soal 1', etc.
+        $baseName = explode(' - Soal', $baseQuestion->name)[0];
+
+        $questions = $this->model->where('module_id', $baseQuestion->module_id)
+            ->where('name', 'like', $baseName . '%')
+            ->orderBy('id')
+            ->get();
+
+        $groupedQuestions = $questions->map(function ($q, $index) {
+            return [
+                'question_number' => $index + 1,
+                'narasi' => $q->desc,
+                'kode_blank' => $q->code,
+                'kode_utuh' => $q->test,
+                'test' => $q->test, // include test for compatibility
+            ];
+        });
+
+        return [
+            'module_id' => $baseQuestion->module_id,
+            'name' => $baseName,
+            'desc' => $baseQuestion->desc,
+            'questions' => $groupedQuestions,
+        ];
+    }
 }

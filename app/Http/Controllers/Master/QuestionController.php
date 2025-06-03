@@ -72,29 +72,6 @@ class QuestionController extends Controller
 
         return WebResponse::response($data, 'master.question.index');
     }
-
-    // public function storeFIB(StoreFibRequest $request)
-    // {
-    //     foreach ($request->input('questions', []) as $q) {
-    //         $result = $this->service->create([
-    //             'module_id' => $request->module_id,
-    //             'name' => $request->name . ' - Soal ' . $q['question_number'],
-    //             'desc' => $q['narasi'],
-    //             'code' => $q['kode_blank'],
-    //             // Removed 'test' key to fix SQL error
-    //             'test' => $q['kode_utuh'],
-    //         ]);
-    //         if ($result instanceof \Exception) {
-    //             return response()->json([
-    //                 'message' => 'Gagal menyimpan soal.',
-    //                 'error' => $result->getMessage(),
-    //             ], 500);
-    //         }
-    //     }
-
-    //     return response()->json(['message' => 'Soal berhasil disimpan']);
-    // }
-
     public function show($id)
     {
         $data = $this->service->find($id);

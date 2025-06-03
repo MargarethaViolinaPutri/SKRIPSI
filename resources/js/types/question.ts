@@ -8,4 +8,13 @@ export type Question = Entity & {
     desc?: string;
     code?: string;
     test?: string;
+    questions?: GeneratedSoal[];
+};
+
+export type GeneratedSoal = {
+    question_number: number;
+    narasi: string;
+    kode_utuh: string;
+    kode_blank: string;
+    test: string;
 };
