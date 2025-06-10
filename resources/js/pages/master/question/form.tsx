@@ -19,7 +19,7 @@ type QuestionFormProps = {
 export default function QuestionForm({ question }: QuestionFormProps) {
     const isDetail = question && question.id != null;
 
-    const { data, setData, post, errors, processing } = useForm<Question>(question);
+    const { data, setData, errors, processing } = useForm<Question>(question);
     const [runOutput, setRunOutput] = useState<string | null>(null);
     const [pyodide, setPyodide] = useState<any>(null);
     const [pyodideLoading, setPyodideLoading] = useState<boolean>(true);
@@ -33,7 +33,6 @@ export default function QuestionForm({ question }: QuestionFormProps) {
         async function loadPyodideAndSet() {
             setPyodideLoading(true);
             try {
-                // @ts-ignore
                 const { loadPyodide } = await import('https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.mjs');
                 const py = await loadPyodide({
                     indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
