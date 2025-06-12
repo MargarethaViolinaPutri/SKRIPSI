@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Service;
+
+use Prism\Prism\Prism;
+use Prism\Prism\Enums\Provider;
+use Illuminate\Support\Facades\Log;
+use Exception;
+
+class PrismService
+{
+    protected $maxRetries = 3;
+    protected $retryDelay = 3000; // milliseconds
+
+    public function generateQuestions(string $code, ?string $type = null): array
+    {
+        // OOP-aware type detection
+        if ($type === null) {
+            $hasClass = preg_match('/class\s+\w+/', $code);
+            $hasInheritance = preg_match('/class\s+\w+\s*\(\s*\w+\s*\)/', $code);
+            $hasMethodCall = preg_match('/\w+\.\w+\(/', $code);
+
+            if ($hasClass && ($hasInheritance || $hasMethodCall)) {
+                $type = 'single';
+            } else {
+                $type = 'multiple';
+            }
+        }
+
+        $attempt = 0;
+
+        while ($attempt < $this->maxRetries) {
+            try {
+                $attempt++;
+
+                $systemPrompt = ($type === 'single') ? <<<PROMPT
+You are an AI assistant that generates a single Python fill-in-the-blank question.
+- Use the ENTIRE code as one unit.
+- Insert multiple blanks (___) in different parts such as class names, method names, inheritance, and object usage.
+- Return JSON array with one object:
+[
+  {
+    "question_number": 1,
+    "narasi": "...",
+    "kode_blank": "...",
+    "kode_utuh": "..."
+  }
+]
+- Do NOT include explanation or markdown.
+PROMPT
+                :
+<<<PROMPT
+You are an AI assistant that generates Python fill-in-the-blank questions.
+- Split the code into logical blocks (per class/function).
+- For each block:
+    - Blank out key parts using ___ (e.g., name, operator, logic, condition statement, function name, operator, control structures (if, for, while), and method calls).
+    - Provide `kode_blank` and original `kode_utuh` (same block).
+- Output must be a JSON array:
+[
+  {
+    "question_number": 1,
+    "narasi": "...",
+    "kode_blank": "...",
+    "kode_utuh": "..."
+  }
+]
+- Only return valid JSON. No markdown or extra text.
+PROMPT;
+
+                $userPrompt = "Here is the Python code:\n\n" . $code;
+
+                $response = Prism::text()
+                    ->using(Provider::OpenAI, 'gpt-4.1')
+                    ->withSystemPrompt($systemPrompt)
+                    ->withPrompt($userPrompt)
+                    ->asText();
+
+                $responseText = trim($response->text);
+                Log::info("Prism raw response: " . $responseText);
+
+                $cleaned = preg_replace('/^```json\s*/i', '', $responseText);
+                $cleaned = preg_replace('/```$/i', '', $cleaned);
+
+                preg_match('/\[\s*\{.*\}\s*\]/s', $cleaned, $matches);
+                $jsonArray = $matches[0] ?? null;
+
+                if ($jsonArray) {
+                    $jsonString = str_replace(["\r", "\0"], '', $jsonArray);
+                    $jsonString = preg_replace('/[\\x00-\\x1F\\x7F]/u', '', $jsonString);
+
+                    $decoded = json_decode($jsonString, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        return $decoded;
+                    } else {
+                        throw new Exception("JSON Decode Error: " . json_last_error_msg());
+                    }
+                }else {
+                    throw new Exception("No valid JSON array found in Prism response.");
+                }
+            } catch (Exception $e) {
+                Log::error("Prism generateQuestions attempt {$attempt} error: " . $e->getMessage());
+
+                if (
+                    stripos($e->getMessage(), 'rate limit') !== false ||
+                    stripos($e->getMessage(), 'quota') !== false ||
+                    stripos($e->getMessage(), 'insufficient_quota') !== false
+                ) {
+                    if ($attempt < $this->maxRetries) {
+                        usleep($this->retryDelay * 1000 * $attempt);
+                        continue;
+                    }
+                    throw new Exception('API quota exceeded or rate limited.');
+                }
+
+                throw $e;
+            }
+        }
+
+        throw new Exception("Failed to generate questions after {$this->maxRetries} attempts.");
+    }
+}

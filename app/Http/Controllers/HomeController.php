@@ -2,44 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use Prism\Prism\Prism;
-use Prism\Prism\Enums\Provider;
-
+use App\Service\PrismService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Exception;
 
 class HomeController extends Controller
 {
+    protected $prismService;
 
-    public function response()
+    public function __construct(PrismService $prismService)
     {
+        $this->prismService = $prismService;
+    }
 
-        $code = "
-        def add(a, b):
-            return a + b
+    /**
+     * Endpoint untuk generate soal fill-in-the-blank.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function generateQuestions(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'type' => 'nullable|in:single,multiple'
+        ]);
 
-        def subtract(a, b):
-            return a - b
-        ";
+        $code = $request->input('code');
+        $type = $request->input('type'); // might be null
 
-        $response = Prism::text()
-            ->using(Provider::OpenAI, 'gpt-4o')
-            ->withSystemPrompt('
-            You are an AI assistant acting as a highly skilled and professional programmer. Your primary goal is to provide accurate, efficient, and well-structured code solutions, along with clear and concise explanations. You prioritize best practices, readability, maintainability, and security in your code. When faced with a problem, you break it down into smaller, manageable parts, consider various approaches, and explain your reasoning.
-            You are adept at identifying potential issues, suggesting improvements, and adapting to different programming paradigms and languages.
-            ')
-            ->withPrompt('
-            Given this python code : 
+        try {
+            $decoded = $this->prismService->generateQuestions($code, $type);
+            return response()->json($decoded);
+        } catch (Exception $e) {
+            Log::error('Prism generateQuestions error: ' . $e->getMessage());
 
-            ' . $code . '
-
-            Please generate the unit test for given code using pytest. in a single file that will return all 
-            test case for all functions in the code. return in this format:
-
-            {
-                "response": "unit test code here"
+            if (
+                str_contains(strtolower($e->getMessage()), 'rate limit') ||
+                str_contains(strtolower($e->getMessage()), 'quota') ||
+                str_contains(strtolower($e->getMessage()), 'insufficient_quota')
+            ) {
+                return response()->json(['error' => 'API quota exceeded, please try again later.'], 429);
             }
-            ')
-            ->asText();
 
-        dd($response->text);
+            return response()->json(['error' => 'Failed to generate questions with Prism.'], 500);
+        }
     }
 }

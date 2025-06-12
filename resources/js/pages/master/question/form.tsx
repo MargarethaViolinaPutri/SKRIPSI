@@ -18,6 +18,7 @@ type QuestionFormProps = {
 
 export default function QuestionForm({ question }: QuestionFormProps) {
     const isDetail = question && question.id != null;
+    const [blankCode, setBlankCode] = useState<string>(question && question.id ? question.test || '' : '');
 
     const { data, setData, errors, processing } = useForm<Question>(question);
     const [runOutput, setRunOutput] = useState<string | null>(null);
@@ -26,6 +27,10 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     const [runningCode, setRunningCode] = useState<boolean>(false);
     const [showCodeTest, setShowCodeTest] = useState<boolean>(isDetail);
 
+    useEffect(() => {
+        setShowCodeTest(isDetail);
+    }, [isDetail]);
+
     const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedSoal[]>([]);
     const [activeQuestion, setActiveQuestion] = useState<number>(1);
 
@@ -33,6 +38,7 @@ export default function QuestionForm({ question }: QuestionFormProps) {
         async function loadPyodideAndSet() {
             setPyodideLoading(true);
             try {
+                // @ts-ignore
                 const { loadPyodide } = await import('https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.mjs');
                 const py = await loadPyodide({
                     indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/',
@@ -48,36 +54,26 @@ export default function QuestionForm({ question }: QuestionFormProps) {
         loadPyodideAndSet();
     }, []);
 
-    const splitCodeIntoQuestions = (code: string): GeneratedSoal[] => {
-        const blocks = code.split(/# Soal \d+/).filter((b) => b.trim() !== '');
-        return blocks.map((block, index) => {
-            const narasiMatch = block.match(/"""(.*?)"""/s);
-            const narasi = narasiMatch ? narasiMatch[1].trim() : 'Narasi tidak ditemukan';
-            const kodeUtuh = (() => {
-                const parts = block.split('"""');
-                return parts.length >= 3 ? parts[2].trim() : parts[1]?.trim() || '';
-            })();
-            const kodeBlank = kodeUtuh
-                .replace(/return\s+.+/g, 'return ____')
-                .replace(/print\([^)]+\)/g, 'print(____)')
-                .replace(/=\s*[^ \n]+/g, '= ____')
-                .replace(/range\([^)]+\)/g, 'range(____)');
+    // Removed local question generation method as per user request
 
-            return {
-                question_number: index + 1,
-                narasi,
-                kode_utuh: kodeUtuh,
-                kode_blank: kodeBlank,
-                test: kodeUtuh,
-            };
-        });
-    };
-
-    const handleGenerateQuestions = () => {
-        const questions = splitCodeIntoQuestions(data.code || '');
-        setGeneratedQuestions(questions);
-        setActiveQuestion(1);
-        setShowCodeTest(false); // Initially hide code test when generating new questions
+    const handleGenerateQuestionsWithPrism = async () => {
+        if (!data.code) {
+            alert('Please enter code to generate questions.');
+            return;
+        }
+        try {
+            const response = await axios.post(route('home.generateQuestions'), { code: data.code });
+            if (response.data && Array.isArray(response.data)) {
+                setGeneratedQuestions(response.data);
+                setActiveQuestion(1);
+                setShowCodeTest(false);
+            } else {
+                alert('Invalid response from Prism API.');
+            }
+        } catch (error) {
+            console.error('Failed to generate questions with Prism:', error);
+            alert('Failed to generate questions with Prism.');
+        }
     };
 
     const handleEditField = (questionNumber: number, field: keyof GeneratedSoal, value: string) => {
@@ -177,37 +173,56 @@ result
 
             {/* Code Editors */}
             <div className="col-span-12">
-                <div className={`grid gap-4 ${showCodeTest || generatedQuestions.length === 1 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-                    {/* Code Utuh Editor */}
-                    <div>
-                        <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
-                        <Editor
-                            className="w-full border"
-                            value={data.code}
-                            onChange={(e) => setData('code', e || '')}
-                            defaultLanguage="python"
-                            height="200px"
-                            theme="vs-light"
-                            options={{ readOnly: isDetail }}
-                        />
-                    </div>
-
-                    {/* Code Test Editor */}
-                    {showCodeTest && (
+                {/* <div className={`grid gap-4 ${showCodeTest || generatedQuestions.length === 1 ? 'md:grid-cols-2' : 'grid-cols-1'}`}> */}
+                {/* Code Utuh Editor */}
+                <div>
+                    <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
+                    <Editor
+                        className="w-full border"
+                        value={data.code}
+                        onChange={(e) => setData('code', e || '')}
+                        defaultLanguage="python"
+                        height="200px"
+                        theme="vs-light"
+                        options={{ readOnly: isDetail }}
+                    />
+                </div>
+                {isDetail && (
+                    <div className={`grid gap-4 md:grid-cols-2`}>
+                        {/* Code Utuh Editor */}
                         <div>
-                            <Label className="mb-1 text-sm font-semibold">Code Test</Label>
+                            <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
                             <Editor
                                 className="w-full border"
-                                value={data.test}
-                                onChange={(e) => setData('test', e || '')}
+                                value={data.code}
+                                onChange={(e) => setData('code', e || '')}
                                 defaultLanguage="python"
                                 height="200px"
                                 theme="vs-light"
                                 options={{ readOnly: isDetail }}
                             />
                         </div>
-                    )}
-                </div>
+
+                        {/* Code Blank Editor */}
+                        <div>
+                            <Label className="mb-1 text-sm font-semibold">Code Blank (New Code)</Label>
+                            <Editor
+                                className="w-full border"
+                                value={blankCode}
+                                onChange={(e) => {
+                                    setBlankCode(e || '');
+                                    setData('test', e || '');
+                                }}
+                                defaultLanguage="python"
+                                height="200px"
+                                theme="vs-light"
+                                options={{ readOnly: isDetail }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* </div> */}
             </div>
 
             {/* Buttons Section */}
@@ -220,7 +235,8 @@ result
 
                     {!isDetail && (
                         <>
-                            <Button variant="outline" type="button" onClick={handleGenerateQuestions} disabled={!data.code}>
+                            {/* Removed local generate questions button */}
+                            <Button variant="outline" type="button" onClick={handleGenerateQuestionsWithPrism} disabled={!data.code}>
                                 Generate Questions
                             </Button>
                             {generatedQuestions.length > 0 && (
