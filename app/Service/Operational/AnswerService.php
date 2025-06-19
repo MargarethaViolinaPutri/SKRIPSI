@@ -115,7 +115,6 @@ class AnswerService extends BaseService implements AnswerContract
         import json
 
         def run_code(path: str) -> str:
-            """Menjalankan file python dan menangkap outputnya."""
             try:
                 result = subprocess.run(
                     [sys.executable, path],
@@ -134,7 +133,6 @@ class AnswerService extends BaseService implements AnswerContract
                 return f"__error__: An unexpected error occurred: {e}"
 
         def get_ast_structure(path: str) -> list:
-            """Menganalisis struktur AST dari sebuah file."""
             try:
                 with open(path, 'r', encoding='utf-8') as f:
                     source = f.read()
@@ -143,7 +141,6 @@ class AnswerService extends BaseService implements AnswerContract
                 return []
 
         def main():
-            """Fungsi utama untuk menjalankan seluruh evaluasi."""
             if len(sys.argv) != 3:
                 print(json.dumps({"error": "Invalid arguments. Expected student_path and reference_path."}))
                 sys.exit(1)
@@ -151,7 +148,7 @@ class AnswerService extends BaseService implements AnswerContract
             student_path = sys.argv[1]
             reference_path = sys.argv[2]
             
-            # Hitung Skor Output
+            # calculate output score
             student_output = run_code(student_path)
             reference_output = run_code(reference_path)
             
@@ -159,7 +156,7 @@ class AnswerService extends BaseService implements AnswerContract
             if not student_output.startswith("__error__") and student_output == reference_output:
                 output_score = 100.0
                 
-            # Hitung Skor Struktur
+            # calculate structure score
             struct_student = get_ast_structure(student_path)
             struct_ref = get_ast_structure(reference_path)
             
@@ -170,8 +167,7 @@ class AnswerService extends BaseService implements AnswerContract
                 total = set_a.union(set_b)
                 if total:
                     structure_score = (len(common) / len(total)) * 100
-                    
-            # Siapkan hasil akhir dan cetak sebagai JSON
+
             final_result = {
                 "output_accuracy_score": round(output_score, 2),
                 "structure_score": round(structure_score, 2)
