@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Operational\AnswerController;
 use Illuminate\Support\Facades\Route;
 
 use App\Service\PrismService;
@@ -26,3 +27,9 @@ Route::get('/test-prism', function (PrismService $prismService) {
 use Inertia\Inertia;
 
 Route::redirect('/', '/auth/login');
+
+// For testing Postman
+Route::get('/token', function () {
+        return csrf_token(); 
+    });
+Route::post('/questions/{questionId}/evaluate', [AnswerController::class, 'evaluateAnswer'])->name('answer.evaluate');
