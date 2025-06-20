@@ -20,9 +20,16 @@ class Module extends Model implements HasMedia
         'materials',
     ];
 
+    protected $casts = [
+        'material_paths' => 'array',
+    ];
+
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('materials');
+        $this->addMediaCollection('materials')
+            ->useDisk('public')
+            ->useFallbackUrl('/materials/default.pdf')
+            ->useFallbackPath(public_path('/materials/default.pdf'));
     }
 
     public function course()
