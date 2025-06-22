@@ -6,4 +6,11 @@ export type Module = Entity & {
     course?: Course;
     name?: string;
     desc?: string;
+    material_paths?: string[]; // Add this property for material_paths from DB
+    materials?: {
+        id: number;
+        file_name: string;
+        mime_type: string;
+        url: string;
+    }[];
 };

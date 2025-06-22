@@ -41,4 +41,5 @@ class Module extends Model implements HasMedia
     {
         return $this->getMedia('materials');
     }
+
 }

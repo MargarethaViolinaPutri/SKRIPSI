@@ -3,30 +3,33 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class ModuleRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
+    public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
+    public function rules()
     {
         return [
-            "course_id" => "required|integer|exists:courses,id",
-            "name" => "required|string|max:255",
-            "desc" => "required|string",
-            "materials" => "required|array",
-            "materials.*" => "required|file|mimes:pdf|max:10024",
+            'course_id' => ['required', 'integer'],
+            'name' => ['required', 'string', 'max:255'],
+            'desc' => ['nullable', 'string'],
+            'materials.*' => ['nullable', 'file', 'mimes:pdf', 'max:10240'], // max 10MB per file
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        $response = response()->json([
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+
+        throw new HttpResponseException($response);
     }
 }

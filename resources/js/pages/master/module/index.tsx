@@ -11,10 +11,12 @@ import axios from 'axios';
 import { format, parseISO } from 'date-fns';
 import { Eye, Plus, Trash } from 'lucide-react';
 import { FormEvent, ReactNode, useCallback, useState } from 'react';
-
+import ModuleForm from './form';
 export default function ModuleIndex() {
     const { processing, delete: destroy } = useForm();
     const [id, setId] = useState<any>(null);
+    const [isDetail, setIsDetail] = useState(false);
+    const [selectedModule, setSelectedModule] = useState<Module | null>(null);
 
     const load = async (params: Record<string, unknown>) => {
         const response = await axios.get<Base<Module[]>>(route('master.module.fetch', params));
@@ -31,6 +33,50 @@ export default function ModuleIndex() {
     const handleDelete = useCallback((moduleId: any) => {
         setId(moduleId);
     }, []);
+
+    const handleDetail = async (moduleId: any) => {
+        try {
+            const response = await axios.get(route('master.module.show', { id: moduleId }));
+            console.log('Module detail response:', response);
+
+            let moduleData = null;
+            if (response.data.module) {
+                moduleData = response.data.module;
+            } else if (response.data.props && response.data.props.module) {
+                moduleData = response.data.props.module;
+            } else if (response.data) {
+                moduleData = response.data;
+            }
+
+            // Normalize materials array
+            if (moduleData.material_paths && moduleData.material_paths.length > 0) {
+                moduleData.materials = moduleData.material_paths.map((path: string) => {
+                    let url = path;
+                    if (!path.startsWith('http')) {
+                        if (path.startsWith('/')) {
+                            url = window.location.origin + '/storage' + path;
+                        } else {
+                            url = window.location.origin + '/storage/' + path;
+                        }
+                    }
+                    return {
+                        url,
+                        file_name: path.split('/').pop(),
+                    };
+                });
+            }
+
+            // Normalize course object if only course_id is present
+            if (moduleData.course_id && !moduleData.course) {
+                moduleData.course = { id: moduleData.course_id, name: '' };
+            }
+
+            setSelectedModule(moduleData);
+            setIsDetail(true);
+        } catch (error) {
+            console.error('Failed to load module detail:', error);
+        }
+    };
 
     const columns: ColumnDef<Module, any>[] = [
         helper.accessor('id', {
@@ -72,11 +118,9 @@ export default function ModuleIndex() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="center">
-                            <Link href={route('master.module.show', { id: row.original.id })}>
-                                <DropdownMenuItem>
-                                    <Eye /> Detail
-                                </DropdownMenuItem>
-                            </Link>
+                            <DropdownMenuItem onClick={() => handleDetail(row.original.id)}>
+                                <Eye /> Detail
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
                                 <Trash /> Delete
                             </DropdownMenuItem>
@@ -115,27 +159,41 @@ export default function ModuleIndex() {
                     <h1 className="text-lg font-medium">Module</h1>
                     <p className="text-sm">Manage All System Module</p>
                 </div>
-                <div className="flex flex-row gap-2">
-                    <Link href={route('master.module.create')}>
-                        <Button>
-                            <Plus />
-                            Add Data
-                        </Button>
-                    </Link>
-                </div>
+                {!isDetail && (
+                    <div className="flex flex-row gap-2">
+                        <Link href={route('master.module.create')}>
+                            <Button>
+                                <Plus />
+                                Add Data
+                            </Button>
+                        </Link>
+                    </div>
+                )}
             </div>
             <div className="my-4">
-                <NextTable<Module>
-                    enableSelect={true}
-                    load={load}
-                    id={'id'}
-                    columns={columns}
-                    mode="table"
-                    // filterComponent={<FilterComponent />}
-                    onSelect={(val) => {
-                        console.log(val);
-                    }}
-                />
+                {!isDetail ? (
+                    <NextTable<Module>
+                        enableSelect={true}
+                        load={load}
+                        id={'id'}
+                        columns={columns}
+                        mode="table"
+                        // filterComponent={<FilterComponent />}
+                        onSelect={(val) => {
+                            console.log(val);
+                        }}
+                    />
+                ) : (
+                    <div>
+                        {selectedModule && (
+                            <ModuleForm
+                                module={selectedModule}
+                                isDetail={isDetail}
+                                iframeSrc={selectedModule.materials && selectedModule.materials.length > 0 ? selectedModule.materials[0].url : ''}
+                            />
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
