@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Operational;
 
 use App\Contract\Master\CourseContract;
-use App\Contract\Master\ModuleContract;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class LMSController extends Controller
 {
-
     protected CourseContract $service;
 
     public function __construct(CourseContract $service)
@@ -45,9 +44,33 @@ class LMSController extends Controller
     public function show($id)
     {
         $data = $this->service->find($id);
+        Log::debug('LMSController show course data:', ['course' => $data]);
+
+        $modules = \App\Models\Module::where('course_id', $id)->get();
+        Log::debug('LMSController show modules data:', ['modules' => $modules]);
+
+        foreach ($modules as $module) {
+            $materials = [];
+            if ($module && !empty($module->material_paths)) {
+                foreach ($module->material_paths as $path) {
+                    $url = \App\Utils\MaterialHelper::getMaterialUrl($path);
+                    Log::debug('Material URL generated:', ['path' => $path, 'url' => $url]);
+                    if ($url) {
+                        $materials[] = [
+                            'url' => $url,
+                            'file_name' => basename($path),
+                        ];
+                    }
+                }
+                $module->material_urls = $materials;
+            } else {
+                $module->materials = [];
+            }
+        }
+
         return Inertia::render('operational/lms/detail', [
-            "course" => $data
+            "course" => $data,
+            "modules" => $modules,
         ]);
     }
-
 }
