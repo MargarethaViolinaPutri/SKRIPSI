@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\QuestionRequest;
 use App\Http\Requests\StoreFibRequest;
 use App\Utils\WebResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -38,26 +39,26 @@ class QuestionController extends Controller
         return Inertia::render('operational/question/index');
     }
 
-    public function fetch()
+    public function fetch(): JsonResponse
     {
-        $paginator = $this->service->all(
-            filters: ['name'],
-            sorts: ['name'],
+        $allowedFilters = [
+            'name',
+            'module_id'
+        ];
+
+        $allowedSorts = [
+            'name',
+            'created_at'
+        ];
+        
+        $result = $this->service->all(
+            filters: $allowedFilters,
+            sorts: $allowedSorts,
             paginate: true,
-            relation: ['module'],
             perPage: request()->get('per_page', 10)
         );
 
-        Log::info('Fetched questions:', ['data' => $paginator->toArray()]);
-
-        $response = [
-            'items' => $paginator->items(),
-            'current_page' => $paginator->currentPage(),
-            'total_page' => $paginator->lastPage(),
-            'total' => $paginator->total(),
-        ];
-
-        return response()->json($response);
+        return response()->json($result);
     }
 
     public function show($id)
