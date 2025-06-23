@@ -1,5 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Module } from '@/types/module';
+import { Question } from '@/types/question';
+import { Link } from '@inertiajs/react';
 import { Editor } from '@monaco-editor/react';
 import React from 'react';
 import { pdfjs } from 'react-pdf';
@@ -10,9 +12,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.m
 
 type LMSDetailProps = {
     modules?: Module[];
+    questions?: Question[];
 };
 
-export default function LMSDetail({ modules }: LMSDetailProps) {
+export default function LMSDetail({ modules, questions }: LMSDetailProps) {
     return (
         <div className="grid grid-cols-12 gap-4">
             <div className="col-span-6 space-y-4">
@@ -45,6 +48,28 @@ export default function LMSDetail({ modules }: LMSDetailProps) {
                     ))
                 ) : (
                     <p>No modules available.</p>
+                )}
+                <div className="mt-8">
+                    <h3 className="mb-4 text-lg font-bold">Questions</h3>
+                    <Link
+                        href={route('operational.question.index')}
+                        className="inline-block rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+                    >
+                        View All Questions
+                    </Link>
+                </div>
+                {questions && questions.length > 0 && (
+                    <div className="mt-4 flex flex-col space-y-2">
+                        {questions.map((question) => (
+                            <Link
+                                key={question.id}
+                                href={route('operational.question.show', { id: question.id })}
+                                className="inline-block rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                            >
+                                {question.name}
+                            </Link>
+                        ))}
+                    </div>
                 )}
             </div>
             <div className="col-span-6">
