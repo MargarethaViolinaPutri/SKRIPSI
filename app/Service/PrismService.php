@@ -33,10 +33,12 @@ class PrismService
             try {
                 $attempt++;
 
-                $systemPrompt = ($type === 'single') ? <<<PROMPT
+$systemPrompt = ($type === 'single') ? <<<PROMPT
 You are an AI assistant that generates a single Python fill-in-the-blank question.
 - Use the ENTIRE code as one unit.
 - Insert multiple blanks (___) in different parts such as class names, method names, inheritance, and object usage.
+- Do NOT blank out any "print" statements; keep them intact.
+- Ensure all classes have properly defined constructors (__init__ methods) matching their usage.
 - Return JSON array with one object:
 [
   {
@@ -54,6 +56,8 @@ You are an AI assistant that generates Python fill-in-the-blank questions.
 - Split the code into logical blocks (per class/function).
 - For each block:
     - Blank out key parts using ___ (e.g., name, operator, logic, condition statement, function name, operator, control structures (if, for, while), and method calls).
+    - Do NOT blank out any "print" statements; keep them intact.
+    - Ensure all classes have properly defined constructors (__init__ methods) matching their usage.
     - Provide `kode_blank` and original `kode_utuh` (same block).
 - Output must be a JSON array:
 [

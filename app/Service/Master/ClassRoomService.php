@@ -46,4 +46,25 @@ class ClassRoomService extends BaseService implements ClassRoomContract
             return $e;
         }
     }
+
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Detach all members related to this classroom
+            ClassRoomUser::where('class_room_id', $id)->delete();
+
+            // Delete the classroom itself
+            $classroom = $this->model->findOrFail($id);
+            $classroom->delete();
+
+            DB::commit();
+
+            return true;
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $e;
+        }
+    }
 }

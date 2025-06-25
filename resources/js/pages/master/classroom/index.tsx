@@ -14,6 +14,7 @@ import { FormEvent, ReactNode, useCallback, useState } from 'react';
 export default function ClassRoomIndex() {
     const { processing, delete: destroy } = useForm();
     const [id, setId] = useState<any>(null);
+    const [refreshKey, setRefreshKey] = useState<number>(0);
 
     const load = async (params: Record<string, unknown>) => {
         const response = await axios.get<Base<ClassRoom[]>>(route('master.classroom.fetch', params));
@@ -22,9 +23,21 @@ export default function ClassRoomIndex() {
 
     const helper = createColumnHelper<ClassRoom>();
 
-    const onDelete = (e: FormEvent, id: any) => {
+    const onDelete = async (e: FormEvent) => {
         e.preventDefault();
-        destroy(route('master.classroom.destroy', { id: id }));
+        if (id === null) {
+            setId(null);
+            return;
+        }
+        try {
+            await destroy(route('master.classroom.destroy', { id }));
+            setId(null);
+            setRefreshKey((oldKey) => oldKey + 1);
+            console.log('Delete successful');
+        } catch (error) {
+            console.error('Delete failed', error);
+            alert('Delete failed: ' + (error?.message || 'Unknown error'));
+        }
     };
 
     const handleDelete = useCallback((classRoomId: any) => {
@@ -92,7 +105,7 @@ export default function ClassRoomIndex() {
                         <DialogDescription>Are you sure you want to delete this class room? This action cannot be undone.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <form onSubmit={(e) => onDelete(e, id)}>
+                        <form onSubmit={onDelete}>
                             <Button variant="outline" onClick={() => setId(null)}>
                                 Cancel
                             </Button>

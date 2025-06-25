@@ -74,7 +74,7 @@ class QuestionController extends Controller
     }
     public function show($id)
     {
-        $data = $this->service->find($id);
+        $data = $this->service->find($id, ['module']);
         return Inertia::render('master/question/form', [
             "question" => $data
         ]);
