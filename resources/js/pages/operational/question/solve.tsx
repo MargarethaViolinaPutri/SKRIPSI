@@ -117,7 +117,7 @@ export default function SolveQuestion({ question }: Props) {
 
         const payload = {
             student_code: studentCode,
-            start_time: startTime ? format(startTime, 'yyyy-MM-dd HH:mm:ss') : null,
+            start_time: formattedStartTime,
             end_time: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
         };
 
