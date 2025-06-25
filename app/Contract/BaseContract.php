@@ -9,6 +9,7 @@ interface BaseContract
         $sorts,
         bool|null $paginate = null,
         array $relation = [],
+        array $withCount = [],
         int $perPage  = 10,
         string $orderColumn  = 'id',
         string $orderPosition = 'asc',

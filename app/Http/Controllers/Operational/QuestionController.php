@@ -7,19 +7,23 @@ use App\Contract\Operational\QuestionContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QuestionRequest;
 use App\Http\Requests\StoreFibRequest;
+use App\Models\Question;
+use App\Service\Operational\ModuleService;
 use App\Utils\WebResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class QuestionController extends Controller
 {
     protected QuestionContract $service;
+    protected ModuleService $moduleService;
     use AuthorizesRequests;
 
-    public function __construct(QuestionContract $service)
+    public function __construct(QuestionContract $service, ModuleService $moduleService)
     {
         $this->service = $service;
-
+        $this->moduleService = $moduleService;
         // Allow all methods only for authenticated users
         $this->middleware('auth');
 
@@ -38,26 +42,28 @@ class QuestionController extends Controller
         return Inertia::render('operational/question/index');
     }
 
-    public function fetch()
+    public function fetch(): JsonResponse
     {
-        $paginator = $this->service->all(
-            filters: ['name'],
-            sorts: ['name'],
+        $allowedFilters = [
+            'name',
+            'module_id'
+        ];
+
+        $allowedSorts = [
+            'name',
+            'created_at'
+        ];
+        
+        $result = $this->service->all(
+            filters: $allowedFilters,
+            sorts: $allowedSorts,
             paginate: true,
-            relation: ['module'],
+            relation: ['userAnswer'],
+            withCount: ['userAnswers'],
             perPage: request()->get('per_page', 10)
         );
 
-        Log::info('Fetched questions:', ['data' => $paginator->toArray()]);
-
-        $response = [
-            'items' => $paginator->items(),
-            'current_page' => $paginator->currentPage(),
-            'total_page' => $paginator->lastPage(),
-            'total' => $paginator->total(),
-        ];
-
-        return response()->json($response);
+        return response()->json($result);
     }
 
     public function show($id)
@@ -65,6 +71,22 @@ class QuestionController extends Controller
         $data = $this->service->find($id);
         return Inertia::render('operational/question/form', [
             "question" => $data
+        ]);
+    }
+
+    public function solve($id)
+    {
+        $question = Question::findOrFail($id);
+        $module = $question->module;
+
+        if ($this->moduleService->isLocked($module)) {
+            return Inertia::render('error/moduleLocked', [
+                'module' => $module
+            ]);
+        }
+
+        return Inertia::render('operational/question/solve', [
+            'question' => $question
         ]);
     }
 }

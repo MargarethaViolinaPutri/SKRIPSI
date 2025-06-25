@@ -17,7 +17,7 @@ class Module extends Model implements HasMedia
     protected $guarded  = [];
 
     protected $appends = [
-        'materials',
+        'materials', 'performance',
     ];
 
     protected $casts = [
@@ -36,10 +36,54 @@ class Module extends Model implements HasMedia
     {
         return $this->belongsTo(Course::class);
     }
+    
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
 
     public function getMaterialsAttribute()
     {
-        return $this->getMedia('materials');
+        if (empty($this->material_paths)) {
+            return [];
+        }
+
+        $materialsData = [];
+        
+        foreach ((array) $this->material_paths as $path) {
+            $materialsData[] = [
+                'name' => $this->name,
+                'url'  => asset('storage/' . $path),
+            ];
+        }
+
+        return $materialsData;
     }
 
+    public function getPerformanceAttribute()
+    {
+        $answeredQuestions = $this->questions->filter(fn($q) => $q->userAnswer !== null);
+
+        if ($answeredQuestions->isEmpty()) {
+            return null;
+        }
+        
+        $totalAttempts = $this->questions->sum('user_answers_count');
+        
+        $totalTimeSpentSeconds = $this->questions->reduce(function ($carry, $question) {
+            return $carry + $question->userAnswers->sum('time_spent_in_seconds');
+        }, 0);
+
+        $totalScore = $answeredQuestions->sum(fn($q) => (float) $q->userAnswer->total_score);
+        $questionsAnsweredCount = $answeredQuestions->count();
+        $totalQuestions = $this->questions->count();
+
+        return [
+            'average_score' => $questionsAnsweredCount > 0 ? $totalScore / $questionsAnsweredCount : 0,
+            'questions_answered' => $questionsAnsweredCount,
+            'total_questions' => $totalQuestions,
+            'total_attempts' => $totalAttempts,
+            'total_time_spent_seconds' => $totalTimeSpentSeconds,
+        ];
+    }
 }
