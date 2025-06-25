@@ -199,7 +199,7 @@ export default function ModuleIndex({ course }: Props) {
                             <Button 
                                 variant="outline" 
                                 size="sm"
-                                className="transition-all duration-200 ease-in-out hover:bg-primary hover:-translate-y-1 hover:scale-105"
+                                className="transition-all duration-200 ease-in-out hover:bg-primary hover:text-white hover:-translate-y-1 hover:scale-105"
                             >
                                 {/* <Terminal className="mr-2 h-4 w-4" /> */}
                                 Detail
