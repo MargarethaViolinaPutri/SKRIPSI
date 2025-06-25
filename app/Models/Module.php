@@ -62,41 +62,28 @@ class Module extends Model implements HasMedia
 
     public function getPerformanceAttribute()
     {
-        if (! $this->relationLoaded('questions')) {
-            return null;
-        }
-
-        $answeredQuestions = $this->questions->filter(function ($question) {
-            return $question->userAnswer !== null;
-        });
+        $answeredQuestions = $this->questions->filter(fn($q) => $q->userAnswer !== null);
 
         if ($answeredQuestions->isEmpty()) {
             return null;
         }
-
-        $totalAttempts = $this->questions->sum('user_answers_count');
-
-        $totalScore = $answeredQuestions->sum(function ($question) {
-            return (float) $question->userAnswer->total_score;
-        });
         
+        $totalAttempts = $this->questions->sum('user_answers_count');
+        
+        $totalTimeSpentSeconds = $this->questions->reduce(function ($carry, $question) {
+            return $carry + $question->userAnswers->sum('time_spent_in_seconds');
+        }, 0);
+
+        $totalScore = $answeredQuestions->sum(fn($q) => (float) $q->userAnswer->total_score);
         $questionsAnsweredCount = $answeredQuestions->count();
         $totalQuestions = $this->questions->count();
-
-        if ($totalQuestions === 0) {
-            return [
-                'average_score' => 0,
-                'questions_answered' => $questionsAnsweredCount,
-                'total_questions' => $totalQuestions,
-                'average_attempts' => 0,
-            ];
-        }
 
         return [
             'average_score' => $questionsAnsweredCount > 0 ? $totalScore / $questionsAnsweredCount : 0,
             'questions_answered' => $questionsAnsweredCount,
             'total_questions' => $totalQuestions,
-            'average_attempts' => $totalAttempts / $totalQuestions,
+            'total_attempts' => $totalAttempts,
+            'total_time_spent_seconds' => $totalTimeSpentSeconds,
         ];
     }
 }

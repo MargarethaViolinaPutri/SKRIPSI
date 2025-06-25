@@ -54,6 +54,22 @@ export default function QuestionIndex({ module }: Props) {
         );
     };
 
+    const formatDuration = (totalSeconds: number): string => {
+        if (totalSeconds < 0) return '00:00';
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const paddedHours = String(hours).padStart(2, '0');
+        const paddedMinutes = String(minutes).padStart(2, '0');
+        const paddedSeconds = String(seconds).padStart(2, '0');
+        
+        if (hours > 0) {
+            return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+        }
+        return `${paddedMinutes}:${paddedSeconds}`;
+    };
+
     const helper = createColumnHelper<Question>();
 
     const questionColumns: ColumnDef<Question, any>[] = [
@@ -101,6 +117,15 @@ export default function QuestionIndex({ module }: Props) {
                 const answer = row.original.user_answer;
                 
                 return getBadgeForScore(answer?.total_score);
+            },
+        }),
+        helper.accessor('time_spent', {
+            id: 'time_spent',
+            header: 'Time Spent (Latest)',
+            cell: ({ row }) => {
+                const seconds = row.original.user_answer?.time_spent_in_seconds;
+                if (seconds === undefined) return <span className="text-gray-400">-</span>;
+                return formatDuration(seconds);
             },
         }),
         helper.accessor('attempts', {

@@ -38,7 +38,8 @@ class ModuleController extends Controller
                 'questions' => function ($query) {
                     $query->withCount('userAnswers');
                 },
-                'questions.userAnswer'
+                'questions.userAnswer',
+                'questions.userAnswers',
             ],
             perPage: request()->get('per_page', 10)
         );

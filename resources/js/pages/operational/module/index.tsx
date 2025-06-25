@@ -71,6 +71,22 @@ export default function ModuleIndex({ course }: Props) {
         );
     };
 
+    const formatDuration = (totalSeconds: number): string => {
+        if (totalSeconds < 0) return '00:00';
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        const paddedHours = String(hours).padStart(2, '0');
+        const paddedMinutes = String(minutes).padStart(2, '0');
+        const paddedSeconds = String(seconds).padStart(2, '0');
+        
+        if (hours > 0) {
+            return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+        }
+        return `${paddedMinutes}:${paddedSeconds}`;
+    };
+
     const helper = createColumnHelper<Module>();
 
     const moduleColumns: ColumnDef<Module, any>[] = [
@@ -141,15 +157,23 @@ export default function ModuleIndex({ course }: Props) {
                 return getBadgeForScore(score);
             }
         }),
-        helper.accessor('avg_attempts', {
-            id: 'avg_attempts',
-            header: 'Avg. Attempts',
+        helper.accessor('total_attempts', {
+            id: 'total_attempts',
+            header: 'Total Attempts',
             cell: ({ row }) => {
-                const avgAttempts = row.original.performance?.average_attempts;
-                if (avgAttempts === null || avgAttempts === undefined) {
-                    return <span className="text-gray-400">-</span>;
-                }
-                return avgAttempts.toFixed(1);
+                const attempts = row.original.performance?.total_attempts;
+                if (attempts === undefined) return <span className="text-gray-400">-</span>;
+
+                return attempts;
+            },
+        }),
+        helper.accessor('total_time', {
+            id: 'total_time',
+            header: 'Total Time Spent',
+            cell: ({ row }) => {
+                const seconds = row.original.performance?.total_time_spent_seconds;
+                if (seconds === undefined) return <span className="text-gray-400">-</span>;
+                return formatDuration(seconds);
             },
         }),
         helper.display({

@@ -124,11 +124,12 @@ class AnswerService extends BaseService implements AnswerContract
                     text=True,
                     timeout=5,
                     check=False,
-                    env={'PYTHONHASHSEED': '0'} # Menurunkan environment variable
+                    env={'PYTHONHASHSEED': '0'}
                 )
                 if result.returncode != 0:
                     return f"__error__: {result.stderr.strip()}"
-                return result.stdout.strip()
+                # return the raw output. Normalization will handle it.
+                return result.stdout
             except subprocess.TimeoutExpired:
                 return "__error__: Execution timed out after 5 seconds."
             except Exception as e:
@@ -142,6 +143,19 @@ class AnswerService extends BaseService implements AnswerContract
             except Exception:
                 return []
 
+        def normalize_output(text: str) -> str:
+            """
+            Cleans up string output for reliable comparison.
+            Handles different newline characters and extra whitespace.
+            """
+            if text.startswith("__error__"):
+                return text
+            # Replace Windows newlines (\r\n) with Unix newlines (\n)
+            # Split into lines, strip whitespace from each line, then rejoin.
+            lines = [line.strip() for line in text.strip().replace('\r\n', '\n').split('\n')]
+            # Join non-empty lines back together
+            return '\n'.join(filter(None, lines))
+
         def main():
             if len(sys.argv) != 3:
                 print(json.dumps({"error": "Invalid arguments. Expected student_path and reference_path."}))
@@ -150,15 +164,17 @@ class AnswerService extends BaseService implements AnswerContract
             student_path = sys.argv[1]
             reference_path = sys.argv[2]
             
-            # calculate output score
-            student_output = run_code(student_path)
-            reference_output = run_code(reference_path)
+            student_output_raw = run_code(student_path)
+            reference_output_raw = run_code(reference_path)
             
+            # Normalize both outputs before comparing
+            student_output = normalize_output(student_output_raw)
+            reference_output = normalize_output(reference_output_raw)
+
             output_score = 0.0
             if not student_output.startswith("__error__") and student_output == reference_output:
                 output_score = 100.0
                 
-            # calculate structure score
             struct_student = get_ast_structure(student_path)
             struct_ref = get_ast_structure(reference_path)
             
