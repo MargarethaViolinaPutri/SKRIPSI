@@ -58,7 +58,8 @@ class QuestionController extends Controller
             filters: $allowedFilters,
             sorts: $allowedSorts,
             paginate: true,
-            relation: ['userAnswer'], 
+            relation: ['userAnswer'],
+            withCount: ['userAnswers'],
             perPage: request()->get('per_page', 10)
         );
 

@@ -34,7 +34,12 @@ class ModuleController extends Controller
             filters: $allowedFilters,
             sorts: $allowedSorts,
             paginate: true,
-            relation: ['questions.userAnswer'], 
+            relation: [
+                'questions' => function ($query) {
+                    $query->withCount('userAnswers');
+                },
+                'questions.userAnswer'
+            ],
             perPage: request()->get('per_page', 10)
         );
 

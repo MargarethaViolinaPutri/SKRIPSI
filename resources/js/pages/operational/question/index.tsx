@@ -103,6 +103,18 @@ export default function QuestionIndex({ module }: Props) {
                 return getBadgeForScore(answer?.total_score);
             },
         }),
+        helper.accessor('attempts', {
+            id: 'attempts',
+            header: 'Attempts',
+            cell: ({ row }) => {
+                const attempts = row.original.user_answers_count ?? 0;
+                return (
+                    <div className="text-center font-medium">
+                        {attempts}
+                    </div>
+                );
+            },
+        }),
         helper.display({
             id: 'actions',
             header: 'Actions',

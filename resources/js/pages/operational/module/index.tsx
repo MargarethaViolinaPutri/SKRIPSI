@@ -138,9 +138,19 @@ export default function ModuleIndex({ course }: Props) {
             header: 'Achievement',
             cell: ({ row }) => {
                 const score = row.original.performance?.average_score;
-                // Gunakan kembali fungsi getBadgeForScore dengan skor rata-rata
                 return getBadgeForScore(score);
             }
+        }),
+        helper.accessor('avg_attempts', {
+            id: 'avg_attempts',
+            header: 'Avg. Attempts',
+            cell: ({ row }) => {
+                const avgAttempts = row.original.performance?.average_attempts;
+                if (avgAttempts === null || avgAttempts === undefined) {
+                    return <span className="text-gray-400">-</span>;
+                }
+                return avgAttempts.toFixed(1);
+            },
         }),
         helper.display({
             id: 'actions',

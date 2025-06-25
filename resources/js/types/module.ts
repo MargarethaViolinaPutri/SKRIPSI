@@ -17,6 +17,7 @@ export type Module = Entity & {
         average_score: number;
         questions_answered: number;
         total_questions: number;
+        average_attempts: number;
     } | null;
     is_locked?: boolean;
 };

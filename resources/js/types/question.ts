@@ -11,6 +11,7 @@ export type Question = Entity & {
     test?: string;
     questions?: GeneratedSoal[];
     user_answer?: Answer | null;
+    user_answers_count?: number;
 };
 
 export type GeneratedSoal = {

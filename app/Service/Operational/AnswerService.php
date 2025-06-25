@@ -83,7 +83,7 @@ class AnswerService extends BaseService implements AnswerContract
             Log::error('StdOut: ' . $e->getProcess()->getOutput());
 
         } finally {
-             File::deleteDirectory($evalPath);
+            //  File::deleteDirectory($evalPath);
         }
 
         $permanentStudentCodePath = 'student_codes/' . uniqid('student_code_') . '.py';
