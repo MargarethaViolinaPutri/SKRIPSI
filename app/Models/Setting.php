@@ -11,4 +11,6 @@ class Setting extends Model
     use HasFactory;
 
     protected $guarded  = [];
+
+    const MIN_SCORE = 80;
 }

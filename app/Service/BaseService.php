@@ -58,6 +58,7 @@ class BaseService implements BaseContract
         $sorts,
         bool|null $paginate = null,
         array $relation = [],
+        array $withCount = [],
         int $perPage  = 10,
         string $orderColumn  = 'id',
         string $orderPosition = 'asc',
@@ -70,6 +71,9 @@ class BaseService implements BaseContract
             $model->allowedFilters($filters)
                 ->allowedSorts($sorts)
                 ->with($relation)
+                ->when(!empty($withCount), function ($query) use ($withCount) {
+                    $query->withCount($withCount);
+                })
                 ->when(!is_null($this->guardForeignKey), function ($query) {
                     $query->where($this->guardForeignKey, $this->userID());
                 })

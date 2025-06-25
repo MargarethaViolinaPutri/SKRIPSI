@@ -1,3 +1,4 @@
+import { Answer } from './answer';
 import { Entity } from './entity';
 import { Module } from './module';
 
@@ -9,6 +10,8 @@ export type Question = Entity & {
     code?: string;
     test?: string;
     questions?: GeneratedSoal[];
+    user_answer?: Answer | null;
+    user_answers_count?: number;
 };
 
 export type GeneratedSoal = {

@@ -45,20 +45,18 @@ export default function LMSIndex() {
             enablePinning: true,
             cell: ({ row }) => {
                 return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                Action
+                    <div className="flex">
+                        <Link href={route('operational.lms.show', row.original.id)}>
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="transition-all duration-200 ease-in-out hover:bg-primary hover:text-white hover:-translate-y-1 hover:scale-105"
+                            >
+                                {/* <Terminal className="mr-2 h-4 w-4" /> */}
+                                Detail
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center">
-                            <Link href={route('operational.lms.show', row.original.id)}>
-                                <DropdownMenuItem>
-                                    <Eye /> Detail
-                                </DropdownMenuItem>
-                            </Link>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        </Link>
+                    </div>
                 );
             },
             meta: {

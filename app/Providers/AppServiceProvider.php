@@ -11,6 +11,7 @@ use App\Contract\Master\ModuleContract;
 use App\Contract\Master\QuestionContract as MasterQuestionContract;
 use App\Contract\Operational\QuestionContract as OperationalQuestionContract;
 use App\Contract\Master\UserContract;
+use App\Contract\Operational\ModuleContract as OperationalModuleContract;
 use App\Contract\Setting\LevelContract;
 use App\Contract\Setting\SettingContract;
 use App\Service\Auth\UserAuthService;
@@ -22,6 +23,7 @@ use App\Service\Master\ModuleService;
 use App\Service\Master\QuestionService as MasterQuestionService;
 use App\Service\Operational\QuestionService as OperationalQuestionService;
 use App\Service\Master\UserService;
+use App\Service\Operational\ModuleService as OperationalModuleService;
 use App\Service\Setting\LevelService;
 use App\Service\Setting\SettingService;
 use Illuminate\Support\ServiceProvider;
@@ -47,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MasterQuestionContract::class, MasterQuestionService::class);
         $this->app->bind(OperationalQuestionContract::class, OperationalQuestionService::class);
         $this->app->bind(UserContract::class, UserService::class);
+
+        $this->app->bind(OperationalModuleContract::class, OperationalModuleService::class);
     }
 
     /**

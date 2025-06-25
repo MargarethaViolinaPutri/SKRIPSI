@@ -53,10 +53,12 @@ class AnswerService extends BaseService implements AnswerContract
             File::put($referenceCodePath, $question->test);
             File::put($evaluatorScriptPath, $this->getPlainEvaluatorCode());
 
+            $pythonExecutable = env('PYTHON_EXECUTABLE', '/usr/bin/python3');
+
             $env = ['PYTHONHASHSEED' => 0];
 
             $process = new Process([
-                'python', 
+                $pythonExecutable, 
                 $evaluatorScriptPath, 
                 $studentCodePath, 
                 $referenceCodePath

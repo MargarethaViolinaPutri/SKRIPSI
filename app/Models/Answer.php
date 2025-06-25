@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 class Answer extends Model
 {
@@ -37,6 +38,8 @@ class Answer extends Model
         'finished_at' => 'datetime',
     ];
 
+    protected $appends = ['time_spent_in_seconds'];
+    
     /**
      * Get the question that the answer belongs to.
      */
@@ -51,5 +54,25 @@ class Answer extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get duration.
+     */
+    public function getTimeSpentInSecondsAttribute(): int
+    {
+        if (empty($this->attributes['started_at']) || empty($this->attributes['finished_at'])) {
+            return 0;
+        }
+
+        try {
+            $finishTime = Carbon::parse($this->attributes['finished_at']);
+            $startTime = Carbon::parse($this->attributes['started_at']);
+
+            return abs($finishTime->diffInSeconds($startTime));
+
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 }
