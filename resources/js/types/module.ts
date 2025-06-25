@@ -13,4 +13,10 @@ export type Module = Entity & {
         mime_type: string;
         url: string;
     }[];
+    performance?: {
+        average_score: number;
+        questions_answered: number;
+        total_questions: number;
+    } | null;
+    is_locked?: boolean;
 };

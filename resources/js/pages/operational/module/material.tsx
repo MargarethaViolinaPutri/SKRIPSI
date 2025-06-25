@@ -16,14 +16,14 @@ export default function MaterialShow({ module }: Props) {
                     module.materials.map((material, index) => (
                         <details key={index} className="..." open={index === 0}>
                             <summary className="...">
-                                {material.file_name || `Document ${index + 1}`}
+                                {material.name || `Document ${index + 1}`}
                             </summary>
                             <div className="mt-4">
                                 <iframe
                                     src={material.url} 
                                     width="100%"
                                     height="700px"
-                                    title={material.file_name || `Module PDF ${index + 1}`}
+                                    title={material.name || `Module PDF ${index + 1}`}
                                     className="..."
                                 />
                             </div>

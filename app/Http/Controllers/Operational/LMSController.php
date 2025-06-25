@@ -50,37 +50,4 @@ class LMSController extends Controller
             'course' => $course,
         ]);
     }
-
-    // public function show($id)
-    // {
-    //     $data = $this->service->find($id);
-    //     Log::debug('LMSController show course data:', ['course' => $data]);
-
-    //     $modules = \App\Models\Module::where('course_id', $id)->get();
-    //     Log::debug('LMSController show modules data:', ['modules' => $modules]);
-
-    //     foreach ($modules as $module) {
-    //         $materials = [];
-    //         if ($module && !empty($module->material_paths)) {
-    //             foreach ($module->material_paths as $path) {
-    //                 $url = \App\Utils\MaterialHelper::getMaterialUrl($path);
-    //                 Log::debug('Material URL generated:', ['path' => $path, 'url' => $url]);
-    //                 if ($url) {
-    //                     $materials[] = [
-    //                         'url' => $url,
-    //                         'file_name' => basename($path),
-    //                     ];
-    //                 }
-    //             }
-    //             $module->material_urls = $materials;
-    //         } else {
-    //             $module->materials = [];
-    //         }
-    //     }
-
-    //     return Inertia::render('operational/lms/detail', [
-    //         "course" => $data,
-    //         "modules" => $modules,
-    //     ]);
-    // }
 }

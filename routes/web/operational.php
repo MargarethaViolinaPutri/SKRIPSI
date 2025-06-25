@@ -27,6 +27,7 @@ Route::group([
         Route::get('', [QuestionController::class, 'index'])->name('index');
         Route::get('fetch', [QuestionController::class, 'fetch'])->name('fetch');
         Route::get('{id}', [QuestionController::class, 'show'])->name('show');
+        Route::get('{id}/solve', [QuestionController::class, 'solve'])->name('solve');
     });
     
     Route::group([

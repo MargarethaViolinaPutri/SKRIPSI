@@ -17,7 +17,7 @@ class Module extends Model implements HasMedia
     protected $guarded  = [];
 
     protected $appends = [
-        'materials',
+        'materials', 'performance',
     ];
 
     protected $casts = [
@@ -36,10 +36,54 @@ class Module extends Model implements HasMedia
     {
         return $this->belongsTo(Course::class);
     }
+    
+    public function questions()
+    {
+        return $this->hasMany(Question::class);
+    }
 
     public function getMaterialsAttribute()
     {
-        return $this->getMedia('materials');
+        if (empty($this->material_paths)) {
+            return [];
+        }
+
+        $materialsData = [];
+        
+        foreach ((array) $this->material_paths as $path) {
+            $materialsData[] = [
+                'name' => $this->name,
+                'url'  => asset('storage/' . $path),
+            ];
+        }
+
+        return $materialsData;
     }
 
+    public function getPerformanceAttribute()
+    {
+        $answeredQuestions = $this->questions->filter(function ($question) {
+            return $question->userAnswer !== null;
+        });
+
+        if ($answeredQuestions->isEmpty()) {
+            return null;
+        }
+
+        $totalScore = $answeredQuestions->sum(function ($question) {
+            return (float) $question->userAnswer->total_score;
+        });
+
+        $questionsAnsweredCount = $answeredQuestions->count();
+
+        if ($questionsAnsweredCount === 0) {
+            return null;
+        }
+
+        return [
+            'average_score' => $totalScore / $questionsAnsweredCount,
+            'questions_answered' => $questionsAnsweredCount,
+            'total_questions' => $this->questions->count(),
+        ];
+    }
 }

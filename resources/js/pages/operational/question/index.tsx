@@ -8,13 +8,13 @@ import { Question } from '@/types/question';
 import { Link } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { Eye, Terminal  } from 'lucide-react';
+import { Eye, Book, Terminal  } from 'lucide-react';
 
 interface Props {
     module: Module;
 }
 
-export default function ModuleShow({ module }: Props) {
+export default function QuestionIndex({ module }: Props) {
     const loadQuestions = async (params: Record<string, unknown>) => {
         const queryParams = {
             ...params,
@@ -23,6 +23,35 @@ export default function ModuleShow({ module }: Props) {
         
         const response = await axios.get<Base<Question[]>>(route('operational.question.fetch', queryParams));
         return response.data;
+    };
+
+    const getBadgeForScore = (score: number | null | undefined) => {
+        if (score === null || score === undefined) {
+            return <span className="text-xs font-semibold text-gray-500">Not Attempted</span>;
+        }
+
+        let badgeImage = '';
+        let altText = '';
+
+        if (score >= 80) {
+            badgeImage = '/images/BADGES GOLD.png';
+            altText = 'Gold Badge';
+        } else if (score >= 40) {
+            badgeImage = '/images/BADGES SILVER.png';
+            altText = 'Silver Badge';
+        } else {
+            badgeImage = '/images/BADGES BRONZE.png';
+            altText = 'Bronze Badge';
+        }
+
+        return (
+            <img 
+                src={badgeImage} 
+                alt={altText} 
+                title={`${altText} (Score: ${score})`} 
+                className="h-10 w-10 object-contain" 
+            />
+        );
     };
 
     const helper = createColumnHelper<Question>();
@@ -47,11 +76,31 @@ export default function ModuleShow({ module }: Props) {
             cell: ({ row }) => {
                 const description = row.original.desc || '';
 
-                if (description.length > 80) {
-                    return `${description.substring(0, 80)}...`;
+                if (description.length > 60) {
+                    return `${description.substring(0, 60)}...`;
                 }
 
                 return description;
+            },
+        }),
+        helper.accessor('score', {
+            id: 'score',
+            header: 'Score',
+            enableColumnFilter: true,
+            cell: ({ row }) => {
+                const score = row.original.user_answer?.total_score;
+                
+                return score ?? <span className="text-xs font-semibold text-gray-500">Not Attempted</span>;
+            },
+        }),
+        helper.accessor('achievement', {
+            id: 'achievement',
+            header: 'Achievement',
+            enableColumnFilter: false,
+            cell: ({ row }) => {
+                const answer = row.original.user_answer;
+                
+                return getBadgeForScore(answer?.total_score);
             },
         }),
         helper.display({
@@ -59,26 +108,18 @@ export default function ModuleShow({ module }: Props) {
             header: 'Actions',
             cell: ({ row }) => {
                 return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
-                                Actions
+                    <div className="flex">
+                        <Link href={route('operational.question.solve', { id: row.original.id })}>
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="transition-all duration-200 ease-in-out hover:bg-primary hover:-translate-y-1 hover:scale-105"
+                            >
+                                {/* <Terminal className="mr-2 h-4 w-4" /> */}
+                                Solve Question
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center">
-                            <Link href={route('operational.module.material', { id: module.id })}>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View Material
-                                </DropdownMenuItem>
-                            </Link>
-
-                            {/* Aksi untuk mengerjakan soal (misal: masuk ke halaman coding) */}
-                            <DropdownMenuItem>
-                                <Terminal className="mr-2 h-4 w-4" />Solve Question
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        </Link>
+                    </div>
                 );
             },
         }),
@@ -90,12 +131,21 @@ export default function ModuleShow({ module }: Props) {
                 <p className="text-sm text-gray-500">Course: {module.course?.name}</p>
                 <h1 className="text-2xl font-bold">Module: {module.name}</h1>
                 <p className="text-sm text-gray-500">
-                    Berikut adalah daftar pertanyaan yang tersedia untuk modul ini.
+                    Here is a list of available questions for this module.
                 </p>
             </div>
             
             <div className="my-4">
-                <h2 className="text-lg font-medium mb-2">Questions</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-medium">Questions</h2>
+
+                    <Link href={route('operational.module.material', { id: module.id })}>
+                        <Button variant="outline">
+                            <Book className="mr-2 h-4 w-4" />
+                            View Material
+                        </Button>
+                    </Link>
+                </div>
                 <NextTable<Question>
                     enableSelect={false}
                     load={loadQuestions}
@@ -108,4 +158,4 @@ export default function ModuleShow({ module }: Props) {
     );
 }
 
-ModuleShow.layout = (page: React.ReactNode) => <AppLayout children={page} />;
+QuestionIndex.layout = (page: React.ReactNode) => <AppLayout children={page} />;

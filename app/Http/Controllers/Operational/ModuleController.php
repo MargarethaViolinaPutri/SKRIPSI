@@ -34,9 +34,17 @@ class ModuleController extends Controller
             filters: $allowedFilters,
             sorts: $allowedSorts,
             paginate: true,
-            relation: [],
+            relation: ['questions.userAnswer'], 
             perPage: request()->get('per_page', 10)
         );
+
+        $modules = collect($result['items']);
+
+        $processedModules = $modules->map(function ($module) {
+            $module->is_locked = $this->service->isLocked($module);
+            return $module;
+        });
+        $result['items'] = $processedModules->all();
 
         return response()->json($result);
     }
@@ -44,6 +52,12 @@ class ModuleController extends Controller
     public function show($id)
     {
         $module = Module::with('course')->findOrFail($id);
+
+        if ($this->service->isLocked($module)) {
+            return Inertia::render('error/moduleLocked', [
+                'module' => $module
+            ]);
+        }
 
         return Inertia::render('operational/question/index', [
             'module' => $module
