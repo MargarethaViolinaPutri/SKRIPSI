@@ -4,15 +4,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Test } from '@/types/test';
-import { useForm } from '@inertiajs/react';
 import { FormEvent } from 'react';
 import { format, parseISO } from 'date-fns';
+import { Course } from '@/types/course';
+import { useForm } from '@inertiajs/react';
 
 interface Props {
     test?: Test;
+    courses: Course[];
 }
 
-export default function TestForm({ test }: Props) {
+export default function TestForm({ test, courses }: Props) {
     const formatForDateTimeLocal = (dateString: string | null | undefined): string => {
         if (!dateString) return '';
         try {
@@ -27,6 +29,7 @@ export default function TestForm({ test }: Props) {
 
     const { data, setData, post, put, processing, errors } = useForm<Test>({
         id: test?.id || 0,
+        course_id: test?.course_id || undefined,
         title: test?.title || '',
         description: test?.description || '',
         type: test?.type || 'pretest',
@@ -51,6 +54,20 @@ export default function TestForm({ test }: Props) {
 
     return (
         <form onSubmit={onSubmit} className="space-y-4">
+            <div>
+                <Label htmlFor="course_id">Course</Label>
+                <Select value={String(data.course_id)} onValueChange={(value) => setData('course_id', Number(value))}>
+                    <SelectTrigger><SelectValue placeholder="Select a course" /></SelectTrigger>
+                    <SelectContent>
+                        {courses.map(course => (
+                            <SelectItem key={course.id} value={String(course.id)}>
+                                {course.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                {errors.course_id && <p className="text-red-500 text-xs mt-1">{errors.course_id}</p>}
+            </div>
             <div>
                 <Label htmlFor="title">Title</Label>
                 <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} />

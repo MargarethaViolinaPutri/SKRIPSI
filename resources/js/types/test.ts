@@ -1,3 +1,4 @@
+import { Course } from './course';
 import { Entity } from './entity';
 import { TestQuestion } from './test-question';
 
@@ -10,4 +11,6 @@ export type Test = Entity & {
     available_from?: string | null;
     available_until?: string | null;
     questions?: TestQuestion[];
+    course_id?: number;
+    course?: Course;
 };

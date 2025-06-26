@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Contract\Master\TestContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Master\TestRequest;
+use App\Models\Course;
 use App\Models\Test;
 use App\Utils\WebResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,11 @@ class TestController extends Controller
 
     public function index()
     {
-        return Inertia::render('master/test/index');
+        $courses = Course::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('master/test/index', [
+            'courses' => $courses,
+        ]);
     }
 
     public function fetch()
@@ -30,6 +35,7 @@ class TestController extends Controller
             filters: ['title', 'type', 'status'],
             sorts: ['title', 'type', 'status', 'created_at'],
             paginate: true,
+            relation: ['course'],
             perPage: request()->get('per_page', 10)
         );
         return response()->json($data);
@@ -37,7 +43,11 @@ class TestController extends Controller
 
     public function create()
     {
-        return Inertia::render('master/test/form');
+        $courses = Course::orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('master/test/form', [
+            'courses' => $courses
+        ]);
     }
 
     public function store(TestRequest $request)
@@ -50,12 +60,17 @@ class TestController extends Controller
 
     public function show(Test $test)
     {
-        $test->load('questions.options');
-
+        // 1. Jika request datang dari 'axios' (untuk tombol "Edit Details"):
+        //    Kondisi ini akan terpenuhi dan akan mengembalikan data JSON.
         if (request()->wantsJson()) {
             return response()->json(['test' => $test]);
         }
 
+        // 2. Jika ini adalah navigasi halaman penuh (untuk tombol "Manage Questions"):
+        //    Kita muat relasi yang dibutuhkan oleh halaman Show.
+        $test->load('questions.options');
+        
+        //    Render komponen 'Show' yang benar.
         return Inertia::render('master/test/show', [
             "test" => $test
         ]);

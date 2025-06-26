@@ -19,6 +19,7 @@ export default function QuestionForm({ testId }: Props) {
             { option_text: '', is_correct: false },
         ],
         correct_option_index: 0,
+        image: null as File | null,
     });
 
     const handleOptionChange = (index: number, value: string) => {
@@ -39,7 +40,8 @@ export default function QuestionForm({ testId }: Props) {
     const onSubmit = (e: FormEvent) => {
         e.preventDefault();
         post(route('master.test.questions.store', { test: testId }), {
-            onSuccess: () => reset()
+            onSuccess: () => reset('question_text', 'options', 'image'),
+            preserveScroll: true,
         });
     };
 
@@ -52,6 +54,21 @@ export default function QuestionForm({ testId }: Props) {
                     <Textarea id="question_text" value={data.question_text} onChange={e => setData('question_text', e.target.value)} />
                     {errors.question_text && <p className="text-red-500 text-xs mt-1">{errors.question_text}</p>}
                 </div>
+                <div>
+                    <Label htmlFor="image">Image (Optional)</Label>
+                    <Input 
+                        id="image" 
+                        type="file" 
+                        onChange={(e) => setData('image', e.target.files ? e.target.files[0] : null)}
+                        className="file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                     {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
+                </div>
+                {data.image && (
+                    <div className="mt-2">
+                        <img src={URL.createObjectURL(data.image)} alt="Image Preview" className="max-w-xs rounded-md" />
+                    </div>
+                )}
                 <div>
                     <Label>Options (select the correct answer)</Label>
                     <RadioGroup value={String(data.correct_option_index)} onValueChange={value => setData('correct_option_index', parseInt(value))}>

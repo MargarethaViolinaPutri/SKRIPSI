@@ -10,10 +10,14 @@ import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
 import { Eye, Plus, Trash, Edit } from 'lucide-react';
 import { FormEvent, ReactNode, useCallback, useState } from 'react';
-import TestForm from './form';
 import { format, parseISO } from 'date-fns';
+import TestForm from './form';
+import { Course } from '@/types/course';
 
-export default function TestIndex() {
+interface Props {
+    courses: Course[];
+}
+export default function TestIndex({ courses }: Props) {
     const { delete: destroy } = useForm();
     const [idToDelete, setIdToDelete] = useState<number | null>(null);
     const [isDetail, setIsDetail] = useState(false);
@@ -54,6 +58,11 @@ export default function TestIndex() {
             id: 'id',
             header: 'ID',
             size: 60,
+        }),
+        helper.accessor('course.name', {
+            id: 'course',
+            header: 'Course',
+            cell: info => info.getValue(),
         }),
         helper.accessor('title', {
             id: 'title',
@@ -167,7 +176,7 @@ export default function TestIndex() {
 
             <div className="my-4">
                 {isDetail ? (
-                    <TestForm test={selectedTest || undefined} />
+                    <TestForm test={selectedTest || undefined} courses={courses}/>
                 ) : (
                     <NextTable<Test> load={load} columns={columns} id="id" />
                 )}

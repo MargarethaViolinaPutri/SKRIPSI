@@ -16,8 +16,14 @@ class TestQuestionController extends Controller
         DB::transaction(function () use ($request, $test) {
             $validated = $request->validated();
 
+             if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('test_question_images', 'public');
+                $validated['image_path'] = $path;
+            }
+
             $question = $test->questions()->create([
                 'question_text' => $validated['question_text'],
+                'image_path' => $validated['image_path'],
             ]);
 
             foreach ($validated['options'] as $index => $optionData) {

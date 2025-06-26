@@ -10,6 +10,16 @@ class TestQuestion extends Model
     use HasFactory;
     protected $guarded = [];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if ($this->image_path) {
+            return asset('storage/' . $this->image_path);
+        }
+        return null;
+    }
+
     public function test()
     {
         return $this->belongsTo(Test::class);

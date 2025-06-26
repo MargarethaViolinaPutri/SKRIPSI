@@ -15,6 +15,7 @@ class TestRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'course_id' => 'required|exists:courses,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => ['required', Rule::in(['pretest', 'posttest', 'delaytest'])],

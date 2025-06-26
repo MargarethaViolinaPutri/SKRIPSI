@@ -27,6 +27,7 @@ class TestQuestionRequest extends FormRequest
             'options.*.option_text' => 'required|string',
             'options.*.is_correct' => 'required|boolean',
             'correct_option_index' => 'required|integer',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ];
     }
 }

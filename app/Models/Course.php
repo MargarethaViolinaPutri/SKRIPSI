@@ -17,4 +17,9 @@ class Course extends Model
     {
         return $this->hasMany(Module::class);
     }
+
+    public function tests()
+    {
+        return $this->hasMany(Test::class);
+    }
 }
