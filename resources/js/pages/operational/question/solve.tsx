@@ -34,12 +34,9 @@ export default function SolveQuestion({ question }: Props) {
     const storageKey = `timer_start_time_question_${question.id}`;
 
     useEffect(() => {
-        // --- LOGIKA LOCALSTORAGE DIMULAI DI SINI ---
-        
         let startTime = localStorage.getItem(storageKey);
 
         if (!startTime) {
-            // Jika tidak ada waktu mulai yang tersimpan, buat yang baru
             startTime = new Date().getTime().toString();
             localStorage.setItem(storageKey, startTime);
         }
@@ -47,7 +44,6 @@ export default function SolveQuestion({ question }: Props) {
         const startTimeMs = parseInt(startTime, 10);
 
         const timerInterval = setInterval(() => {
-            // Hitung selisih waktu, bukan hanya increment
             const nowMs = new Date().getTime();
             const elapsed = Math.floor((nowMs - startTimeMs) / 1000);
             setElapsedSeconds(elapsed);

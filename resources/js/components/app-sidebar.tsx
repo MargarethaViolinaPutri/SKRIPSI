@@ -34,6 +34,11 @@ const master: NavItem = {
             icon: LayoutGrid,
             href: route('master.user.index'),
         },
+        {
+            title: 'Test',
+            icon: LayoutGrid,
+            href: route('master.test.index'),
+        },
     ],
 };
 

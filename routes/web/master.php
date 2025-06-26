@@ -4,6 +4,8 @@ use App\Http\Controllers\Master\ClassRoomController;
 use App\Http\Controllers\Master\CourseController;
 use App\Http\Controllers\Master\ModuleController;
 use App\Http\Controllers\Master\QuestionController;
+use App\Http\Controllers\Master\TestController;
+use App\Http\Controllers\Master\TestQuestionController;
 use App\Http\Controllers\Master\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -81,5 +83,15 @@ Route::group([
         Route::post('', [UserController::class, 'store'])->name('store');
         Route::put('{id}', [UserController::class, 'update'])->name('update');
         Route::delete('{id}', [UserController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::group([
+        'prefix' => 'test',
+        'as' => 'test.',
+    ], function () {
+        Route::get('fetch', [TestController::class, 'fetch'])->name('fetch');
+        Route::post('{test}/questions', [TestQuestionController::class, 'store'])->name('questions.store');
+        Route::delete('{test}/questions/{question}', [TestQuestionController::class, 'destroy'])->name('questions.destroy');
+        Route::resource('', TestController::class) ->parameters(['' => 'test']);;
     });
 });

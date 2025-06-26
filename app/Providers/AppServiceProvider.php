@@ -9,6 +9,8 @@ use App\Contract\Master\ClassRoomContract;
 use App\Contract\Master\CourseContract;
 use App\Contract\Master\ModuleContract;
 use App\Contract\Master\QuestionContract as MasterQuestionContract;
+use App\Contract\Master\TestContract;
+use App\Contract\Master\TestQuestionContract;
 use App\Contract\Operational\QuestionContract as OperationalQuestionContract;
 use App\Contract\Master\UserContract;
 use App\Contract\Operational\ModuleContract as OperationalModuleContract;
@@ -21,6 +23,8 @@ use App\Service\Master\ClassRoomService;
 use App\Service\Master\CourseService;
 use App\Service\Master\ModuleService;
 use App\Service\Master\QuestionService as MasterQuestionService;
+use App\Service\Master\TestQuestionService;
+use App\Service\Master\TestService;
 use App\Service\Operational\QuestionService as OperationalQuestionService;
 use App\Service\Master\UserService;
 use App\Service\Operational\ModuleService as OperationalModuleService;
@@ -51,6 +55,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserContract::class, UserService::class);
 
         $this->app->bind(OperationalModuleContract::class, OperationalModuleService::class);
+        $this->app->bind(TestContract::class, TestService::class);
+        $this->app->bind(TestQuestionContract::class, TestQuestionService::class);
     }
 
     /**
