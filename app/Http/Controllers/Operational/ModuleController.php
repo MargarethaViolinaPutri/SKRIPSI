@@ -43,8 +43,14 @@ class ModuleController extends Controller
             ],
             perPage: request()->get('per_page', 10)
         );
-
         $modules = collect($result['items']);
+
+        $modules->each(function ($module) {
+            $module->makeHidden('questions');
+
+            $module->makeHidden(['material_paths', 'created_at', 'updated_at']);
+        });
+        $result['items'] = $modules->all();
 
         $processedModules = $modules->map(function ($module) {
             $module->is_locked = $this->service->isLocked($module);

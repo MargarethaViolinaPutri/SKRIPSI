@@ -8,12 +8,12 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Question } from '@/types/question';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 
 interface Props {
     question: Question;
@@ -134,6 +134,14 @@ export default function SolveQuestion({ question }: Props) {
 
     return (
         <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+                <Link href={route('operational.module.show', { id: question.module_id })}>
+                    <Button variant="ghost" className="px-0 text-gray-600 hover:text-gray-900">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Question List
+                    </Button>
+                </Link>
+            </div>
             <h1 className="text-2xl font-bold mb-2">{question.name}</h1>
             <p className="mb-6">{question.desc}</p>
 

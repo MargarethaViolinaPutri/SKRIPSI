@@ -1,5 +1,6 @@
 import { Course } from './course';
 import { Entity } from './entity';
+import { TestAttempt } from './test-attempt';
 import { TestQuestion } from './test-question';
 
 export type Test = Entity & {
@@ -13,4 +14,5 @@ export type Test = Entity & {
     questions?: TestQuestion[];
     course_id?: number;
     course?: Course;
+    user_latest_completed_attempt?: TestAttempt | null;
 };

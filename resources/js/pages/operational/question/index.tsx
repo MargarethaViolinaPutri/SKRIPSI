@@ -8,7 +8,7 @@ import { Question } from '@/types/question';
 import { Link } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { Eye, Book, Terminal  } from 'lucide-react';
+import { Eye, Book, Terminal, ChevronRight } from 'lucide-react';
 
 interface Props {
     module: Module;
@@ -20,7 +20,7 @@ export default function QuestionIndex({ module }: Props) {
             ...params,
             'filter[module_id]': module.id,
         };
-        
+
         const response = await axios.get<Base<Question[]>>(route('operational.question.fetch', queryParams));
         return response.data;
     };
@@ -45,11 +45,11 @@ export default function QuestionIndex({ module }: Props) {
         }
 
         return (
-            <img 
-                src={badgeImage} 
-                alt={altText} 
-                title={`${altText} (Score: ${score})`} 
-                className="h-10 w-10 object-contain" 
+            <img
+                src={badgeImage}
+                alt={altText}
+                title={`${altText} (Score: ${score})`}
+                className="h-10 w-10 object-contain"
             />
         );
     };
@@ -63,7 +63,7 @@ export default function QuestionIndex({ module }: Props) {
         const paddedHours = String(hours).padStart(2, '0');
         const paddedMinutes = String(minutes).padStart(2, '0');
         const paddedSeconds = String(seconds).padStart(2, '0');
-        
+
         if (hours > 0) {
             return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
         }
@@ -105,7 +105,7 @@ export default function QuestionIndex({ module }: Props) {
             enableColumnFilter: true,
             cell: ({ row }) => {
                 const score = row.original.user_answer?.total_score;
-                
+
                 return score ?? <span className="text-xs font-semibold text-gray-500">Not Attempted</span>;
             },
         }),
@@ -115,7 +115,7 @@ export default function QuestionIndex({ module }: Props) {
             enableColumnFilter: false,
             cell: ({ row }) => {
                 const answer = row.original.user_answer;
-                
+
                 return getBadgeForScore(answer?.total_score);
             },
         }),
@@ -147,8 +147,8 @@ export default function QuestionIndex({ module }: Props) {
                 return (
                     <div className="flex">
                         <Link href={route('operational.question.solve', { id: row.original.id })}>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 size="sm"
                                 className="transition-all duration-200 ease-in-out hover:bg-primary hover:text-white hover:-translate-y-1 hover:scale-105"
                             >
@@ -164,14 +164,24 @@ export default function QuestionIndex({ module }: Props) {
 
     return (
         <div>
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                <Link href={route('operational.lms.index')} className="hover:underline">Courses</Link>
+                <ChevronRight className="h-4 w-4" />
+                    <Link href={route('operational.lms.show', { id: module.course_id })} className="hover:underline">
+                        {module.course?.name}
+                    </Link>
+                <ChevronRight className="h-4 w-4" />
+                <span className="font-semibold text-gray-800 dark:text-gray-200">{module.name}</span>
+            </div>
+
             <div className="mb-6">
-                <p className="text-sm text-gray-500">Course: {module.course?.name}</p>
+                {/* <p className="text-sm text-gray-500">Course: {module.course?.name}</p> */}
                 <h1 className="text-2xl font-bold">Module: {module.name}</h1>
                 <p className="text-sm text-gray-500">
                     Here is a list of available questions for this module.
                 </p>
             </div>
-            
+
             <div className="my-4">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-medium">Questions</h2>

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Operational\LMSController;
 use App\Http\Controllers\Operational\ModuleController;
 use App\Http\Controllers\Operational\QuestionController;
+use App\Http\Controllers\Operational\TestController;
 use Illuminate\Support\Facades\Route;
 
 Route::group([
@@ -39,5 +40,16 @@ Route::group([
         Route::get('{id}', [ModuleController::class, 'show'])->name('show');
 
         Route::get('{id}/material', [ModuleController::class, 'showMaterial'])->name('material');
+    });
+
+    Route::group([
+        'prefix' => 'test',
+        'as' => 'test.',
+        'middleware' => ['auth'],
+    ], function () {
+        Route::get('{test}/start', [TestController::class, 'start'])->name('start');
+        Route::get('attempt/{attempt}', [TestController::class, 'take'])->name('take');
+        Route::post('attempt/{attempt}', [TestController::class, 'submit'])->name('submit');
+        Route::get('attempt/{attempt}/result', [TestController::class, 'result'])->name('result');
     });
 });

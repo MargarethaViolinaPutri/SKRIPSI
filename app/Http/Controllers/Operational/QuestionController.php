@@ -63,6 +63,28 @@ class QuestionController extends Controller
             perPage: request()->get('per_page', 10)
         );
 
+        if (isset($result['error'])) {
+            return response()->json($result, 500);
+        }
+
+        $questions = collect($result['items']);
+
+        $transformedQuestions = $questions->map(function ($question) {
+            return [
+                'id' => $question->id,
+                'name' => $question->name,
+                'desc' => $question->desc,
+                'user_answers_count' => $question->user_answers_count,
+                
+                'user_answer' => $question->userAnswer ? [
+                    'total_score' => (float) $question->userAnswer->total_score,
+                    'time_spent_in_seconds' => $question->userAnswer->time_spent_in_seconds,
+                ] : null,
+            ];
+        });
+
+        $result['items'] = $transformedQuestions;
+
         return response()->json($result);
     }
 
@@ -85,8 +107,16 @@ class QuestionController extends Controller
             ]);
         }
 
+        $questionDataForStudent = [
+            'id' => $question->id,
+            'module_id' => $question->module_id,
+            'name' => $question->name,
+            'desc' => $question->desc,
+            'code' => $question->code,
+        ];
+
         return Inertia::render('operational/question/solve', [
-            'question' => $question
+            'question' => $questionDataForStudent
         ]);
     }
 }

@@ -6,15 +6,18 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { Eye, Lock } from 'lucide-react';
+import { ChevronRight, Eye, Lock } from 'lucide-react';
 import NextTable from '@/components/next-table';
 import axios from 'axios';
+import { Test } from '@/types/test';
+import TestCard from '../test/testCard';
 
 interface Props {
     course: Course;
+    availableTests: Test[];
 }
 
-export default function ModuleIndex({ course }: Props) {
+export default function ModuleIndex({ course, availableTests }: Props) {
     const loadModules = async (params: Record<string, unknown>) => {
         const queryParams = {
             ...params,
@@ -214,12 +217,28 @@ export default function ModuleIndex({ course }: Props) {
     return (
         <div>
             <div className="mb-6">
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                    <Link href={route('operational.lms.index')} className="hover:underline">Courses</Link>
+                    <ChevronRight className="h-4 w-4" />
+                    <span className="font-semibold text-gray-800 dark:text-gray-200">{course.name}</span>
+                </div>
                 <h1 className="text-2xl font-bold">Course: {course.name}</h1>
                 <p className="text-sm text-gray-500">
                     Here is a list of available modules for this course.
                 </p>
             </div>
             
+            {availableTests && availableTests.length > 0 && (
+                <div className="mb-12">
+                    <h2 className="text-2xl font-semibold mb-4 pb-2 border-b">Available Tests</h2>
+                    <div className="space-y-4">
+                        {availableTests.map(test => (
+                            <TestCard key={test.id} test={test} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="my-4">
                 <h2 className="text-lg font-medium mb-2">Modules</h2>
                 <NextTable<Module>
