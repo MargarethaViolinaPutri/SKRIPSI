@@ -42,6 +42,7 @@ class UserService extends BaseService implements UserContract
         $sorts,
         bool|null $paginate = null,
         array $relation = [],
+        array $withCount = [],
         int $perPage  = 10,
         string $orderColumn  = 'id',
         string $orderPosition = 'asc',
@@ -50,11 +51,12 @@ class UserService extends BaseService implements UserContract
         try {
             $model = $this->model->newQuery();
 
-            // Apply filters
             if (isset($filters) && in_array('role', $filters)) {
                 if (request()->has('filter.role')) {
                     $role = request()->get('filter')['role'];
-                    $model->role($role);
+                    $model->whereHas('roles', function ($query) use ($role) {
+                        $query->where('name', $role);
+                    });
                 }
             }
 
@@ -69,14 +71,48 @@ class UserService extends BaseService implements UserContract
             }
 
             // Apply other filters, sorts, relations, pagination as in BaseService
-            $query = $model->with($relation)
+            // Removed allowedFilters and allowedSorts due to missing method error
+            if (!empty($filters)) {
+                foreach ($filters as $filter) {
+                    if ($filter === 'name' && request()->has('filter.name')) {
+                        $model->where('name', 'like', '%' . request()->get('filter')['name'] . '%');
+                    }
+                    if ($filter === 'role' && request()->has('filter.role')) {
+                        $role = request()->get('filter')['role'];
+                        $model->whereHas('roles', function ($query) use ($role) {
+                            $query->where('name', $role);
+                        });
+                    }
+                }
+            }
+
+            if (!empty($sorts)) {
+                foreach ($sorts as $sort) {
+                    if (request()->has('sort')) {
+                        $sortParam = request()->get('sort');
+                        $direction = 'asc';
+                        if (str_starts_with($sortParam, '-')) {
+                            $direction = 'desc';
+                            $sortParam = substr($sortParam, 1);
+                        }
+                        if ($sortParam === $sort) {
+                            $model->orderBy($sortParam, $direction);
+                        }
+                    }
+                }
+            }
+
+            $model->with($relation)
+                ->when(!empty($withCount), function ($query) use ($withCount) {
+                    $query->withCount($withCount);
+                })
                 ->orderBy($orderColumn, $orderPosition);
 
             if (!$paginate) {
-                return $query->get();
+                return $model->get();
             }
 
-            $result = $query->paginate($perPage)
+            $result = $model->paginate($perPage)
                 ->appends(request()->query());
 
             return [

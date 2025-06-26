@@ -1,28 +1,21 @@
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Question } from '@/types/question';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Clock } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface Props {
     question: Question;
 }
 
 export default function SolveQuestion({ question }: Props) {
-    const parsedCode = useMemo(() => question.code?.split(/(____)/g) || [], [question.code]);
-    
-    const blankCount = useMemo(() => parsedCode.filter(part => part === '____').length, [parsedCode]);
+    const parsedCode = useMemo(() => question.test?.split(/(____)/g) || [], [question.test]);
+
+    const blankCount = useMemo(() => parsedCode.filter((part) => part === '____').length, [parsedCode]);
 
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [resultData, setResultData] = useState<any | null>(null);
@@ -35,7 +28,7 @@ export default function SolveQuestion({ question }: Props) {
 
     useEffect(() => {
         // --- LOGIKA LOCALSTORAGE DIMULAI DI SINI ---
-        
+
         let startTime = localStorage.getItem(storageKey);
 
         if (!startTime) {
@@ -89,31 +82,24 @@ export default function SolveQuestion({ question }: Props) {
             altText = 'Bronze Badge';
         }
 
-        return (
-            <img 
-                src={badgeImage} 
-                alt={altText} 
-                title={`${altText} (Score: ${score})`} 
-                className="h-20 w-20 object-contain mx-auto"
-            />
-        );
+        return <img src={badgeImage} alt={altText} title={`${altText} (Score: ${score})`} className="mx-auto h-20 w-20 object-contain" />;
     };
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        
+
         let answerIndex = 0;
-        const studentCode = parsedCode.map(part => {
-            if (part === '____') {
-                return answers[answerIndex++] || '';
-            }
-            return part;
-        }).join('');
+        const studentCode = parsedCode
+            .map((part) => {
+                if (part === '____') {
+                    return answers[answerIndex++] || '';
+                }
+                return part;
+            })
+            .join('');
 
         const storedStartTime = localStorage.getItem(storageKey);
-        const formattedStartTime = storedStartTime 
-            ? format(new Date(parseInt(storedStartTime, 10)), 'yyyy-MM-dd HH:mm:ss') 
-            : null;
+        const formattedStartTime = storedStartTime ? format(new Date(parseInt(storedStartTime, 10)), 'yyyy-MM-dd HH:mm:ss') : null;
 
         const payload = {
             student_code: studentCode,
@@ -128,7 +114,6 @@ export default function SolveQuestion({ question }: Props) {
 
             setResultData(response.data.data);
             setIsResultModalOpen(true);
-
         } catch (error) {
             console.error('Failed to submit answer:', error);
         } finally {
@@ -137,27 +122,27 @@ export default function SolveQuestion({ question }: Props) {
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-2">{question.name}</h1>
+        <div className="mx-auto max-w-4xl">
+            <h1 className="mb-2 text-2xl font-bold">{question.name}</h1>
             <p className="mb-6">{question.desc}</p>
 
-            <div className="flex items-center justify-end mt-4 text-sm">
-                <Clock className="h-4 w-4 mr-2" />
+            <div className="mt-4 flex items-center justify-end text-sm">
+                <Clock className="mr-2 h-4 w-4" />
                 <span>Time:</span>
-                <span className="font-semibold ml-1">{formatTime(elapsedSeconds)}</span>
+                <span className="ml-1 font-semibold">{formatTime(elapsedSeconds)}</span>
             </div>
 
-            <div className="bg-gray-800 text-white p-6 rounded-lg font-mono text-sm whitespace-pre-wrap">
+            <div className="rounded-lg bg-gray-800 p-6 font-mono text-sm whitespace-pre-wrap text-white">
                 {parsedCode.map((part, index) => {
                     if (part === '____') {
-                        const answerIndex = parsedCode.slice(0, index).filter(p => p === '____').length;
+                        const answerIndex = parsedCode.slice(0, index).filter((p) => p === '____').length;
                         return (
                             <input
                                 key={index}
                                 type="text"
                                 value={answers[answerIndex]}
                                 onChange={(e) => handleAnswerChange(answerIndex, e.target.value)}
-                                className="bg-gray-600 border border-gray-500 rounded px-1 py-0.5 text-yellow-300 inline-block w-40 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                                className="inline-block w-40 rounded border border-gray-500 bg-gray-600 px-1 py-0.5 text-yellow-300 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                             />
                         );
                     } else {
@@ -176,21 +161,17 @@ export default function SolveQuestion({ question }: Props) {
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle className="text-center text-2xl">Submission Result</DialogTitle>
-                        <DialogDescription className="text-center">
-                            You've completed the question. Here is your result.
-                        </DialogDescription>
+                        <DialogDescription className="text-center">You've completed the question. Here is your result.</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="flex flex-col items-center justify-center space-y-4">
                             {getBadgeForScore(resultData?.total_score)}
-                            <p className="text-4xl font-bold">
-                                {resultData?.total_score.toFixed(2)}
-                            </p>
+                            <p className="text-4xl font-bold">{resultData?.total_score.toFixed(2)}</p>
                             <p className="text-sm text-gray-500">Total Score</p>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setIsResultModalOpen(false);
                                 router.get(route('operational.module.show', { id: question.module_id }), {}, { preserveState: false });

@@ -262,7 +262,6 @@ result
                                     defaultLanguage="python"
                                     height="200px"
                                     theme="vs-light"
-                                    options={{ readOnly: isDetail }}
                                 />
                             </div>
                         </div>
@@ -330,7 +329,7 @@ result
                                 <div key={q.question_number} className="rounded-lg border bg-white p-4 shadow-md">
                                     <div className="mb-2">
                                         <span className="inline-block rounded-full bg-indigo-500 px-3 py-1 text-sm font-medium text-white">
-                                            Soal {q.question_number}
+                                            Question {q.question_number}
                                         </span>
                                     </div>
                                     <Textarea
