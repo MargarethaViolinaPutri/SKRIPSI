@@ -50,10 +50,10 @@ class AnswerService extends BaseService implements AnswerContract
             $evaluatorScriptPath = "{$evalPath}/evaluate_plain.py";
 
             File::put($studentCodePath, $studentCode);
-            File::put($referenceCodePath, $question->code);
+            File::put($referenceCodePath, $question->test);
             File::put($evaluatorScriptPath, $this->getPlainEvaluatorCode());
 
-            $pythonExecutable = env('PYTHON_EXECUTABLE', 'C:\\Python312\\python.exe');
+            $pythonExecutable = env('PYTHON_EXECUTABLE', '/usr/bin/python3');
 
             $env = ['PYTHONHASHSEED' => 0];
 
@@ -159,7 +159,7 @@ class AnswerService extends BaseService implements AnswerContract
             reference_output = run_code(reference_path)
 
             output_score = 0.0
-            if not student_output.startswith("__error__") and normalize_output(student_output) == normalize_output(reference_output):
+            if not student_output.startswith("__error__") and student_output == reference_output:
                 output_score = 100.0
 
             # calculate structure score

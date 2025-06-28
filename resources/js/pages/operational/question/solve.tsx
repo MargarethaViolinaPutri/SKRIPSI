@@ -5,9 +5,7 @@ import { Question } from '@/types/question';
 import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { Clock } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { ArrowLeft, Clock } from 'lucide-react';
 
 interface Props {

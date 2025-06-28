@@ -84,7 +84,10 @@ export default function TestResult({ attempt }: Props) {
             </div>
 
             <div className="mt-10 text-center">
-                <Link href={route('operational.lms.show', {id: attempt.test.course_id})}>
+                <Link 
+                    href={route('operational.lms.show', {id: attempt.test.course_id})}
+                    preserveState={false}
+                >
                     <Button>
                         <ArrowLeft className="h-4 w-4 mr-2" /> Back to Course
                     </Button>

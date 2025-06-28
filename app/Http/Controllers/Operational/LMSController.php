@@ -45,25 +45,25 @@ class LMSController extends Controller
 
     public function show($id)
     {
-        $course = Course::with('modules')->findOrFail($id);
+        $course = Course::with([
+            'modules',
+            'tests' => function ($query) {
+                $query->where('status', 'published')->with('userLatestCompletedAttempt');
+            }
+        ])->findOrFail($id);
         
-        $allPublishedTests = $course->tests()
-            ->where('status', 'published')
-            ->with('userLatestCompletedAttempt')
-            ->get();
-            
-        $pretest = $allPublishedTests->firstWhere('type', 'pretest');
+        $pretest = $course->tests->firstWhere('type', 'pretest');
         $hasCompletedPretest = !$pretest || ($pretest->userLatestCompletedAttempt !== null);
 
         $allModulesCompleted = $this->service->areAllModulesCompleted($course);
 
-        $completedTestTypes = $allPublishedTests
+        $completedTestTypes = $course->tests
             ->whereNotNull('userLatestCompletedAttempt')
             ->pluck('type')
             ->unique()
             ->toArray();
 
-        $processedTests = $allPublishedTests->map(function ($test) use ($completedTestTypes, $allModulesCompleted, $hasCompletedPretest) {
+        $processedTests = $course->tests->map(function ($test) use ($completedTestTypes, $allModulesCompleted) {
             
             $test->is_locked_by_sequence = false;
             $currentTestTypeIndex = array_search($test->type, $this->testSequence);
@@ -84,8 +84,8 @@ class LMSController extends Controller
             $test->is_visible = $isWithinSchedule || $isAlreadyCompleted;
 
             return $test;
-        })
-        ->filter(function ($test) {
+
+        })->filter(function ($test) {
             return $test->is_visible;
         });
 
