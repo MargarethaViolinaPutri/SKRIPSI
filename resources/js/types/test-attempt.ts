@@ -10,4 +10,5 @@ export type TestAttempt = Entity & {
     finished_at?: string;
     test: Test;
     answers?: TestAnswer[];
+    time_spent_in_seconds?: number;
 };

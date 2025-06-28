@@ -12,6 +12,10 @@ class Test extends Model
     use HasFactory;
     protected $guarded = [];
 
+    const PRE_TEST = 'pretest';
+    const POST_TEST = 'posttest';
+    const DELAY_TEST = 'delaytest';
+
     protected $casts = [
         'available_from' => 'datetime',
         'available_until' => 'datetime',

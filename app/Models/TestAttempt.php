@@ -20,6 +20,17 @@ class TestAttempt extends Model
         'question_order' => 'array',
     ];
 
+    protected $appends = ['time_spent_in_seconds'];
+
+    public function getTimeSpentInSecondsAttribute(): int
+    {
+        if (!$this->started_at || !$this->finished_at) {
+            return 0;
+        }
+        
+        return abs($this->finished_at->diffInSeconds($this->started_at));
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

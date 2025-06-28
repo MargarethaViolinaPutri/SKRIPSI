@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Operational;
 use App\Contract\Operational\ModuleContract;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
+use App\Models\Test;
+use App\Models\TestAttempt;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -65,6 +68,18 @@ class ModuleController extends Controller
     {
         $module = Module::with('course')->findOrFail($id);
 
+        $course = $module->course;
+        $pretest = Test::where('course_id', $course->id)->where('type', 'pretest')->where('status', 'published')->first();
+
+        if ($pretest) {
+            $hasCompletedPretest = TestAttempt::where('test_id', $pretest->id)
+                ->where('user_id', Auth::id())
+                ->whereNotNull('finished_at')
+                ->exists();
+
+            abort_if(!$hasCompletedPretest, 403, 'Please complete the pre-test for this course to access the modules.');
+        }
+        
         if ($this->service->isLocked($module)) {
             return Inertia::render('error/moduleLocked', [
                 'module' => $module

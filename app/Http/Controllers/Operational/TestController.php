@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Operational;
 
+use App\Contract\Master\CourseContract;
 use App\Http\Controllers\Controller;
 use App\Models\Test;
 use App\Models\TestAnswer;
@@ -12,10 +13,22 @@ use Inertia\Inertia;
 
 class TestController extends Controller
 {
+    protected CourseContract $service;
+
+    public function __construct(CourseContract $service)
+    {
+        $this->service = $service;
+    }
+
     public function start(Test $test)
     {
         if ($test->status !== 'published' || ($test->available_from && !now()->isBetween($test->available_from, $test->available_until))) {
             abort(403, 'This test is not available.');
+        }
+
+        if (in_array($test->type, ['posttest', 'delaytest'])) {
+            $allModulesCompleted = $this->service->areAllModulesCompleted($test->course);
+            abort_if(!$allModulesCompleted, 403, 'You must complete all modules with a score of 80+ to start this test.');
         }
 
         $existingAttempt = TestAttempt::where('test_id', $test->id)

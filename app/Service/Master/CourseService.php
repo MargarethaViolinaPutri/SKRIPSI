@@ -15,4 +15,32 @@ class CourseService extends BaseService implements CourseContract
     {
         $this->model = $model;
     }
+
+    public function areAllModulesCompleted(Course $course): bool
+    {
+        $course->load(['modules.questions' => function ($query) {
+            $query->withCount('userAnswers')->with('userAnswer');
+        }]);
+
+        if ($course->modules->isEmpty()) {
+            return true;
+        }
+
+        foreach ($course->modules as $module) {
+            $performance = $module->getPerformanceAttribute();
+
+            if (!$performance) {
+                return false;
+            }
+
+            $isCompleted = ($performance['questions_answered'] === $performance['total_questions']);
+            $isPassed = ($performance['average_score'] >= 80);
+
+            if (!$isCompleted || !$isPassed) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

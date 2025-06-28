@@ -5,14 +5,15 @@ namespace App\Http\Controllers\Operational;
 use App\Contract\Master\CourseContract;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Test;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class LMSController extends Controller
 {
     protected CourseContract $service;
+    private $testSequence = [Test::PRE_TEST, Test::POST_TEST, Test::DELAY_TEST];
 
     public function __construct(CourseContract $service)
     {
@@ -45,30 +46,54 @@ class LMSController extends Controller
     public function show($id)
     {
         $course = Course::with('modules')->findOrFail($id);
-
-        $availableTests = $course->tests()
-            ->with('userLatestCompletedAttempt')
+        
+        $allPublishedTests = $course->tests()
             ->where('status', 'published')
-            ->where(function ($query) {
-                $query->where(function ($dateQuery) {
-                    $dateQuery->where(function ($specificDate) {
-                        $specificDate->whereNotNull('available_from')
-                                     ->where('available_from', '<=', now())
-                                     ->where('available_until', '>=', now());
-                    })->orWhere(function ($alwaysAvailable) {
-                        $alwaysAvailable->whereNull('available_from')
-                                        ->whereNull('available_until');
-                    });
-                })
-                ->orWhereHas('userLatestCompletedAttempt');
-            })
-            ->orderBy('title', 'asc')
+            ->with('userLatestCompletedAttempt')
             ->get();
+            
+        $pretest = $allPublishedTests->firstWhere('type', 'pretest');
+        $hasCompletedPretest = !$pretest || ($pretest->userLatestCompletedAttempt !== null);
+
+        $allModulesCompleted = $this->service->areAllModulesCompleted($course);
+
+        $completedTestTypes = $allPublishedTests
+            ->whereNotNull('userLatestCompletedAttempt')
+            ->pluck('type')
+            ->unique()
+            ->toArray();
+
+        $processedTests = $allPublishedTests->map(function ($test) use ($completedTestTypes, $allModulesCompleted, $hasCompletedPretest) {
+            
+            $test->is_locked_by_sequence = false;
+            $currentTestTypeIndex = array_search($test->type, $this->testSequence);
+            if ($currentTestTypeIndex > 0) {
+                $prerequisiteType = $this->testSequence[$currentTestTypeIndex - 1];
+                if (!in_array($prerequisiteType, $completedTestTypes)) {
+                    $test->is_locked_by_sequence = true;
+                }
+            }
+
+            $test->is_locked_by_modules = false;
+            if (in_array($test->type, ['posttest', 'delaytest']) && !$allModulesCompleted) {
+                $test->is_locked_by_modules = true;
+            }
+
+            $isWithinSchedule = $test->available_from ? now()->isBetween($test->available_from, $test->available_until) : true;
+            $isAlreadyCompleted = $test->userLatestCompletedAttempt !== null;
+            $test->is_visible = $isWithinSchedule || $isAlreadyCompleted;
+
+            return $test;
+        })
+        ->filter(function ($test) {
+            return $test->is_visible;
+        });
 
         return Inertia::render('operational/module/index', [
             'course' => $course,
             'modules' => $course->modules,
-            'availableTests' => $availableTests,
+            'availableTests' => $processedTests->values(),
+            'areModulesUnlocked' => $hasCompletedPretest,
         ]);
     }
 }

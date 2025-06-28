@@ -11,13 +11,15 @@ import NextTable from '@/components/next-table';
 import axios from 'axios';
 import { Test } from '@/types/test';
 import TestCard from '../test/testCard';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Props {
     course: Course;
     availableTests: Test[];
+    areModulesUnlocked: boolean;
 }
 
-export default function ModuleIndex({ course, availableTests }: Props) {
+export default function ModuleIndex({ course, availableTests, areModulesUnlocked }: Props) {
     const loadModules = async (params: Record<string, unknown>) => {
         const queryParams = {
             ...params,
@@ -183,6 +185,23 @@ export default function ModuleIndex({ course, availableTests }: Props) {
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => {
+                if (!areModulesUnlocked) {
+                    return (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" disabled>
+                                        <Lock className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Please complete the course pre-test to unlock modules.</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    );
+                }
+                
                 if (row.original.is_locked) {
                     return (
                         <Button

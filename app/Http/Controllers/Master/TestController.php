@@ -60,17 +60,12 @@ class TestController extends Controller
 
     public function show(Test $test)
     {
-        // 1. Jika request datang dari 'axios' (untuk tombol "Edit Details"):
-        //    Kondisi ini akan terpenuhi dan akan mengembalikan data JSON.
         if (request()->wantsJson()) {
             return response()->json(['test' => $test]);
         }
 
-        // 2. Jika ini adalah navigasi halaman penuh (untuk tombol "Manage Questions"):
-        //    Kita muat relasi yang dibutuhkan oleh halaman Show.
         $test->load('questions.options');
         
-        //    Render komponen 'Show' yang benar.
         return Inertia::render('master/test/show', [
             "test" => $test
         ]);
