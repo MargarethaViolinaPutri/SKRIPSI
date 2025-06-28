@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function SolveQuestion({ question }: Props) {
-    const parsedCode = useMemo(() => question.test?.split(/(____)/g) || [], [question.test]);
+    const parsedCode = useMemo(() => question.code?.split(/(____)/g) || [], [question.code]);
 
     const blankCount = useMemo(() => parsedCode.filter((part) => part === '____').length, [parsedCode]);
 
