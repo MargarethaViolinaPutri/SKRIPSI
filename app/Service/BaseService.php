@@ -77,10 +77,7 @@ class BaseService implements BaseContract
                 ->when(!is_null($this->guardForeignKey), function ($query) {
                     $query->where($this->guardForeignKey, $this->userID());
                 })
-                ->orderBy($orderColumn, $orderPosition)
-                ->when(!is_null($this->guardForeignKey), function ($query) {
-                    $query->paginate()->appends(request()->query());
-                });
+                ->orderBy($orderColumn, $orderPosition);
 
             if (!$paginate) return $model->get();
 

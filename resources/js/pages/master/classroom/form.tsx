@@ -8,6 +8,7 @@ import { FormResponse } from '@/lib/constant';
 import { fetchUser } from '@/lib/select';
 import { ClassRoom } from '@/types/classroom';
 import { useForm } from '@inertiajs/react';
+import axios from 'axios';
 import { Loader } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -26,6 +27,31 @@ type ClassFormData = {
 export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
     const { data, setData, post, put, errors, processing } = useForm<ClassFormData>();
 
+    // Wrapper function to filter users to only teacher role
+    const fetchTeacher = async (inputValue: string) => {
+        const users = await fetchUser(inputValue);
+        return users.filter((user: any) => user.label?.toLowerCase() === 'teacher' || user.role?.toLowerCase() === 'teacher');
+    };
+
+    // Wrapper function to filter users to only student role and exclude those already assigned to a class
+    const fetchStudent = async (inputValue: string) => {
+        const response = await axios.get(route('master.user.fetch'), {
+            params: {
+                'filter[name]': inputValue,
+                'filter[extend_assigned]': true, // Request extended data with class_rooms_count
+            },
+        });
+        const users = response.data.items ?? [];
+        // Filter users to only those with role student and exclude assigned students
+        const filteredUsers = users.filter(
+            (e: any) => e.roles?.some((role: any) => role.name.toLowerCase() === 'student') && e.class_rooms_count === 0,
+        );
+        return filteredUsers.map((e: any) => ({
+            value: e.id,
+            label: e.name,
+        }));
+    };
+
     const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
@@ -40,7 +66,7 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
         <form onSubmit={onSubmit} className="grid grid-cols-12 gap-4">
             <div className="col-span-12 flex flex-col gap-1.5">
                 <Label>Teacher</Label>
-                <MultiSelect placeholder="Members" name="members" loadOptions={fetchUser} onChange={(v) => setData('user_id', v.value)} />
+                <MultiSelect placeholder="Members" name="members" loadOptions={fetchTeacher} onChange={(v) => setData('user_id', v.value)} />
                 <InputError message={errors?.user_id} />
             </div>
             <div className="col-span-12 flex flex-col gap-1.5">
@@ -64,7 +90,18 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
                     placeholder="Members"
                     name="members"
                     isMulti={true}
-                    loadOptions={fetchUser}
+                    loadOptions={async (inputValue: string) => {
+                        const fetched = await fetchStudent(inputValue);
+                        // Merge selected members with fetched to ensure selected are visible
+                        const selected = data.members || [];
+                        const merged = [...selected];
+                        fetched.forEach((item) => {
+                            if (!selected.find((s: any) => s.value === item.value)) {
+                                merged.push(item);
+                            }
+                        });
+                        return merged;
+                    }}
                     value={data.members}
                     onChange={(v) => setData('members', v)}
                 />

@@ -20,7 +20,16 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     const isDetail = question && question.id != null;
     const [blankCode, setBlankCode] = useState<string>(question && question.id ? question.test || '' : '');
 
-    const { data, setData, errors, processing } = useForm<Question>(question);
+    console.log('Question prop:', question);
+    console.log('Module in question:', question?.module);
+
+    const initialData = {
+        ...question,
+        module_id: question?.module_id || question?.module?.id || null,
+        module: question?.module || null,
+    };
+
+    const { data, setData, errors, processing } = useForm<Question>(initialData);
     const [runOutput, setRunOutput] = useState<string | null>(null);
     const [pyodide, setPyodide] = useState<any>(null);
     const [pyodideLoading, setPyodideLoading] = useState<boolean>(true);
@@ -30,6 +39,8 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     useEffect(() => {
         setShowCodeTest(isDetail);
     }, [isDetail]);
+
+    // Removed moduleLabel state and fetchModule effect as module data is directly used from question prop
 
     const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedSoal[]>([]);
     const [activeQuestion, setActiveQuestion] = useState<number>(1);
@@ -110,12 +121,47 @@ export default function QuestionForm({ question }: QuestionFormProps) {
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!data.module_id || !data.name || !data.desc) {
+            alert('Pastikan semua field wajib telah diisi.');
+            return;
+        }
+
+        try {
+            if (isDetail && question?.id) {
+                await axios.post(route('master.question.update', question.id), {
+                    ...data,
+                    _method: 'PUT',
+                });
+            } else {
+                await axios.post(route('master.question.store'), data);
+            }
+            router.visit(route('master.question.index'));
+        } catch (err: any) {
+            console.error('Gagal menyimpan soal:', err.response?.data || err);
+            alert('Gagal menyimpan soal: ' + (err.response?.data?.message || 'Unknown error'));
+        }
+    };
+
     const handleRunCode = async () => {
-        if (!pyodide || !data.code) return;
+        console.log('handleRunCode called');
+        if (!pyodide) {
+            console.error('Pyodide is not loaded');
+            setRunOutput('Error: Pyodide is not loaded');
+            return;
+        }
+        if (!data.code) {
+            console.warn('No code to run');
+            setRunOutput('Please enter code to run.');
+            return;
+        }
         setRunningCode(true);
         setRunOutput(null);
         try {
             const escapedCode = data.code.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"""/g, '\\"\\"\\"');
+            console.log('Escaped code:', escapedCode);
             const pythonCode = `
 import sys
 from io import StringIO
@@ -133,63 +179,50 @@ output.close()
 result
 `;
             const result = await pyodide.runPythonAsync(pythonCode);
-            setRunOutput(result || 'Kode berhasil dijalankan.');
+            console.log('Python execution result:', result);
+            if (result) {
+                setRunOutput(result);
+            } else {
+                console.warn('No output from Python execution');
+                setRunOutput('No output from Python execution.');
+            }
         } catch (error: any) {
+            console.error('Error running Python code:', error);
             setRunOutput(`Error: ${error.message}`);
         } finally {
             setRunningCode(false);
         }
     };
-
     return (
-        <div className="grid grid-cols-12 gap-4">
-            {/* Module Field */}
-            <div className="col-span-12 flex flex-col gap-1.5">
-                <Label>Module</Label>
-                <MultiSelect
-                    placeholder="Module"
-                    name="module_id"
-                    defaultValue={{ value: data.module_id, label: data.module?.name }}
-                    onChange={(v) => setData('module_id', v.value)}
-                    loadOptions={fetchModule}
-                    disabled={isDetail}
-                />
-                <InputError message={errors?.module_id} />
-            </div>
-
-            {/* Name Field */}
-            <div className="col-span-12 flex flex-col gap-1.5">
-                <Label>Name</Label>
-                <Input placeholder="Name" value={data.name} onChange={(v) => setData('name', v.currentTarget.value)} disabled={isDetail} />
-                <InputError message={errors?.name} />
-            </div>
-
-            {/* Description Field */}
-            <div className="col-span-12 flex flex-col gap-1.5">
-                <Label>Description</Label>
-                <Textarea placeholder="Description" value={data.desc} onChange={(v) => setData('desc', v.currentTarget.value)} disabled={isDetail} />
-                <InputError message={errors?.desc} />
-            </div>
-
-            {/* Code Editors */}
-            <div className="col-span-12">
-                {/* <div className={`grid gap-4 ${showCodeTest || generatedQuestions.length === 1 ? 'md:grid-cols-2' : 'grid-cols-1'}`}> */}
-                {/* Code Utuh Editor */}
-                <div>
-                    <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
-                    <Editor
-                        className="w-full border"
-                        value={data.code}
-                        onChange={(e) => setData('code', e || '')}
-                        defaultLanguage="python"
-                        height="200px"
-                        theme="vs-light"
-                        options={{ readOnly: isDetail }}
+        <>
+            <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-4">
+                {/* Module Field */}
+                <div className="col-span-12 flex flex-col gap-1.5">
+                    <Label>Module</Label>
+                    <MultiSelect
+                        placeholder="Module"
+                        name="module_id"
+                        defaultValue={{ value: data.module_id, label: data.module?.name || '' }}
+                        onChange={(v) => setData('module_id', v.value)}
+                        loadOptions={fetchModule}
                     />
+                    <InputError message={errors?.module_id} />
                 </div>
-                {isDetail && (
-                    <div className={`grid gap-4 md:grid-cols-2`}>
-                        {/* Code Utuh Editor */}
+                {/* Name Field */}
+                <div className="col-span-12 flex flex-col gap-1.5">
+                    <Label>Name</Label>
+                    <Input placeholder="Name" value={data.name} onChange={(v) => setData('name', v.currentTarget.value)} />
+                    <InputError message={errors?.name} />
+                </div>
+                {/* Description Field */}
+                <div className="col-span-12 flex flex-col gap-1.5">
+                    <Label>Description</Label>
+                    <Textarea placeholder="Description" value={data.desc} onChange={(v) => setData('desc', v.currentTarget.value)} />
+                    <InputError message={errors?.desc} />
+                </div>
+                {/* Code Editors */}
+                <div className="col-span-12">
+                    {!isDetail && (
                         <div>
                             <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
                             <Editor
@@ -202,58 +235,77 @@ result
                                 options={{ readOnly: isDetail }}
                             />
                         </div>
-
-                        {/* Code Blank Editor */}
-                        <div>
-                            <Label className="mb-1 text-sm font-semibold">Code Blank (New Code)</Label>
-                            <Editor
-                                className="w-full border"
-                                value={blankCode}
-                                onChange={(e) => {
-                                    setBlankCode(e || '');
-                                    setData('test', e || '');
-                                }}
-                                defaultLanguage="python"
-                                height="200px"
-                                theme="vs-light"
-                                options={{ readOnly: isDetail }}
-                            />
+                    )}
+                    {isDetail && (
+                        <div className={`grid gap-4 md:grid-cols-2`}>
+                            <div>
+                                <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
+                                <Editor
+                                    className="w-full border"
+                                    value={data.code}
+                                    onChange={(e) => setData('code', e || '')}
+                                    defaultLanguage="python"
+                                    height="200px"
+                                    theme="vs-light"
+                                    options={{ readOnly: isDetail }}
+                                />
+                            </div>
+                            <div>
+                                <Label className="mb-1 text-sm font-semibold">Code Blank (New Code)</Label>
+                                <Editor
+                                    className="w-full border"
+                                    value={blankCode}
+                                    onChange={(e) => {
+                                        setBlankCode(e || '');
+                                        setData('test', e || '');
+                                    }}
+                                    defaultLanguage="python"
+                                    height="200px"
+                                    theme="vs-light"
+                                />
+                            </div>
                         </div>
-                    </div>
-                )}
-
-                {/* </div> */}
-            </div>
-
-            {/* Buttons Section */}
-            <div className="col-span-12 flex flex-col gap-1.5">
-                <InputError message={errors?.code} />
-                <div className="flex gap-2">
-                    <Button variant="outline" type="button" onClick={handleRunCode} disabled={pyodideLoading || runningCode || !data.code}>
-                        {pyodideLoading ? 'Loading Pyodide...' : runningCode ? 'Running...' : 'Jalankan Kode'}
-                    </Button>
-
-                    {!isDetail && (
-                        <>
-                            {/* Removed local generate questions button */}
-                            <Button variant="outline" type="button" onClick={handleGenerateQuestionsWithPrism} disabled={!data.code}>
-                                Generate Questions
-                            </Button>
-                            {generatedQuestions.length > 0 && (
-                                <Button type="button" onClick={handleAutoSubmit} disabled={processing}>
-                                    {processing ? 'Menyimpan...' : 'Submit'}
-                                </Button>
-                            )}
-                        </>
                     )}
                 </div>
-                {runOutput && (
+                {/* Buttons Section */}
+                <div className="col-span-12 flex flex-col gap-1.5">
+                    <InputError message={errors?.code} />
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={() => handleRunCode()}
+                            disabled={pyodideLoading || runningCode || !data.code}
+                        >
+                            {pyodideLoading ? 'Loading Pyodide...' : runningCode ? 'Running...' : 'Jalankan Kode'}
+                        </Button>
+                        {!isDetail && (
+                            <>
+                                <Button variant="outline" type="button" onClick={handleGenerateQuestionsWithPrism} disabled={!data.code}>
+                                    Generate Questions
+                                </Button>
+                                {generatedQuestions.length > 0 && (
+                                    <Button type="button" onClick={handleAutoSubmit} disabled={processing}>
+                                        {processing ? 'Menyimpan...' : 'Submit'}
+                                    </Button>
+                                )}
+                            </>
+                        )}
+                        {isDetail && (
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Menyimpan...' : 'Update'}
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {runOutput !== null && runOutput !== '' && (
                     <div className="col-span-12">
                         <Label>Output:</Label>
                         <pre className="rounded bg-black p-3 whitespace-pre-wrap text-white">{runOutput}</pre>
                     </div>
                 )}
-            </div>
+            </form>
 
             {/* Questions Navigation and Display */}
             {!isDetail && generatedQuestions.length > 0 && (
@@ -277,10 +329,15 @@ result
                                 <div key={q.question_number} className="rounded-lg border bg-white p-4 shadow-md">
                                     <div className="mb-2">
                                         <span className="inline-block rounded-full bg-indigo-500 px-3 py-1 text-sm font-medium text-white">
-                                            Soal {q.question_number}
+                                            Question {q.question_number}
                                         </span>
                                     </div>
-                                    <p className="mb-4 text-gray-700 italic">{q.narasi}</p>
+                                    <Textarea
+                                        className="mb-4 text-gray-700 italic"
+                                        value={q.narasi}
+                                        onChange={(e) => handleEditField(q.question_number, 'narasi', e.currentTarget.value)}
+                                        rows={3}
+                                    />
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <Label className="mb-1 text-sm font-semibold">Kode Blank (Editable)</Label>
@@ -308,7 +365,7 @@ result
                     </div>
                 </>
             )}
-        </div>
+        </>
     );
 }
 

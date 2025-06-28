@@ -50,17 +50,17 @@ class AnswerService extends BaseService implements AnswerContract
             $evaluatorScriptPath = "{$evalPath}/evaluate_plain.py";
 
             File::put($studentCodePath, $studentCode);
-            File::put($referenceCodePath, $question->test);
+            File::put($referenceCodePath, $question->code);
             File::put($evaluatorScriptPath, $this->getPlainEvaluatorCode());
 
-            $pythonExecutable = env('PYTHON_EXECUTABLE', '/usr/bin/python3');
+            $pythonExecutable = env('PYTHON_EXECUTABLE', 'C:\\Python312\\python.exe');
 
             $env = ['PYTHONHASHSEED' => 0];
 
             $process = new Process([
-                $pythonExecutable, 
-                $evaluatorScriptPath, 
-                $studentCodePath, 
+                $pythonExecutable,
+                $evaluatorScriptPath,
+                $studentCodePath,
                 $referenceCodePath
             ],
                 $evalPath,
@@ -116,6 +116,10 @@ class AnswerService extends BaseService implements AnswerContract
         import ast
         import json
 
+        def normalize_output(output: str) -> str:
+            # Normalize output by stripping whitespace and converting to lowercase
+            return output.strip().lower()
+
         def run_code(path: str) -> str:
             try:
                 result = subprocess.run(
@@ -149,19 +153,19 @@ class AnswerService extends BaseService implements AnswerContract
 
             student_path = sys.argv[1]
             reference_path = sys.argv[2]
-            
+
             # calculate output score
             student_output = run_code(student_path)
             reference_output = run_code(reference_path)
-            
+
             output_score = 0.0
-            if not student_output.startswith("__error__") and student_output == reference_output:
+            if not student_output.startswith("__error__") and normalize_output(student_output) == normalize_output(reference_output):
                 output_score = 100.0
-                
+
             # calculate structure score
             struct_student = get_ast_structure(student_path)
             struct_ref = get_ast_structure(reference_path)
-            
+
             structure_score = 0.0
             if struct_student and struct_ref:
                 set_a, set_b = set(struct_student), set(struct_ref)

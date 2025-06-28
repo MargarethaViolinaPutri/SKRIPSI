@@ -12,8 +12,75 @@ class PrismService
     protected $maxRetries = 3;
     protected $retryDelay = 3000; // milliseconds
 
-    public function generateQuestions(string $code, ?string $type = null): array
+    public function generateQuestions(string $code, ?string $type = null, int $startNumber = 1): array
     {
+        // Check for delimiter '#' to split questions
+        if (strpos($code, '#') !== false) {
+            $blocks = preg_split('/^#.*$/m', $code, -1, PREG_SPLIT_NO_EMPTY);
+            $questions = [];
+            $questionNumber = $startNumber;
+
+            foreach ($blocks as $block) {
+                $block = trim($block);
+                if (empty($block)) {
+                    continue;
+                }
+
+                $systemPrompt = <<<PROMPT
+You are an AI assistant that generates a Python fill-in-the-blank question.
+- Use the ENTIRE code block as one unit.
+- Insert multiple blanks (____) in different parts such as variable names, operators, logic, condition statements, function names, control structures (if, for, while), and method calls.
+- Do NOT blank out any "print" statements; keep them intact.
+- Ensure all classes have properly defined constructors (__init__ methods) matching their usage.
+- Return JSON array with one object:
+[
+  {
+    "question_number": {$questionNumber},
+    "narasi": "...",
+    "kode_blank": "...",
+    "kode_utuh": "..."
+  }
+]
+- Do NOT include explanation or markdown.
+PROMPT;
+
+                $userPrompt = "Here is the Python code:\n\n" . $block;
+
+                $response = Prism::text()
+                    ->using(Provider::OpenAI, 'gpt-4.1')
+                    ->withSystemPrompt($systemPrompt)
+                    ->withPrompt($userPrompt)
+                    ->asText();
+
+                $responseText = trim($response->text);
+                Log::info("Prism raw response: " . $responseText);
+
+                $cleaned = preg_replace('/^```json\s*/i', '', $responseText);
+                $cleaned = preg_replace('/```$/i', '', $cleaned);
+
+                preg_match('/\[\s*\{.*\}\s*\]/s', $cleaned, $matches);
+                $jsonArray = $matches[0] ?? null;
+
+                if ($jsonArray) {
+                    $jsonString = str_replace(["\r", "\0"], '', $jsonArray);
+                    $jsonString = preg_replace('/[\\x00-\\x1F\\x7F]/u', '', $jsonString);
+
+                    $decoded = json_decode($jsonString, true);
+                    if (json_last_error() === JSON_ERROR_NONE) {
+                        $questions = array_merge($questions, $decoded);
+                    } else {
+                        throw new Exception("JSON Decode Error: " . json_last_error_msg());
+                    }
+                } else {
+                    throw new Exception("No valid JSON array found in Prism response.");
+                }
+
+                $questionNumber++;
+            }
+
+            return $questions;
+        }
+
         // OOP-aware type detection
         if ($type === null) {
             $hasClass = preg_match('/class\s+\w+/', $code);
@@ -36,7 +103,9 @@ class PrismService
                 $systemPrompt = ($type === 'single') ? <<<PROMPT
 You are an AI assistant that generates a single Python fill-in-the-blank question.
 - Use the ENTIRE code as one unit.
-- Insert multiple blanks (___) in different parts such as class names, method names, inheritance, and object usage.
+- Insert multiple blanks (____) in different parts such as class names, method names, inheritance, and object usage.
+- Do NOT blank out any "print" statements; keep them intact.
+- Ensure all classes have properly defined constructors (__init__ methods) matching their usage.
 - Return JSON array with one object:
 [
   {
@@ -53,7 +122,9 @@ PROMPT
 You are an AI assistant that generates Python fill-in-the-blank questions.
 - Split the code into logical blocks (per class/function).
 - For each block:
-    - Blank out key parts using ___ (e.g., name, operator, logic, condition statement, function name, operator, control structures (if, for, while), and method calls).
+    - Blank out key parts using ____ (e.g., name, operator, logic, condition statement, function name, operator, control structures (if, for, while), and method calls).
+    - Do NOT blank out any "print" statements; keep them intact.
+    - Ensure all classes have properly defined constructors (__init__ methods) matching their usage.
     - Provide `kode_blank` and original `kode_utuh` (same block).
 - Output must be a JSON array:
 [
@@ -94,7 +165,7 @@ PROMPT;
                     } else {
                         throw new Exception("JSON Decode Error: " . json_last_error_msg());
                     }
-                }else {
+                } else {
                     throw new Exception("No valid JSON array found in Prism response.");
                 }
             } catch (Exception $e) {

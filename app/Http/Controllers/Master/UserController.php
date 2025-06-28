@@ -8,6 +8,7 @@ use App\Http\Requests\UserRequest;
 use App\Utils\WebResponse;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -24,17 +25,31 @@ class UserController extends Controller
         return Inertia::render('master/user/index');
     }
 
-    public function fetch()
-    {
-        $data = $this->service->all(
-            filters: ['name'],
-            sorts: ['name'],
-            paginate: true,
-            relation: ['roles'],
-            perPage: request()->get('per_page', 10)
-        );
-        return response()->json($data);
+
+public function fetch()
+{
+    $withCount = [];
+
+    if (request()->has('filter.extend_assigned')) {
+        $withCount[] = 'classRooms';
     }
+
+    $filters = ['name'];
+    if (request()->has('filter.role')) {
+        $filters[] = 'role';
+    }
+
+    $data = $this->service->all(
+        filters: $filters,
+        sorts: ['name'],
+        paginate: true,
+        relation: ['roles'],
+        withCount: $withCount,
+        perPage: request()->get('per_page', 10)
+    );
+    Log::info('User fetch data:', ['data' => $data]);
+    return response()->json($data);
+}
 
     public function create()
     {

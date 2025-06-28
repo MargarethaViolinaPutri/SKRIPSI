@@ -18,14 +18,36 @@ class QuestionService extends BaseService implements QuestionContract
 
     public function createMultiple(array $base, array $questions)
     {
+        // Extract base name without " - Soal" suffix if present
+        $baseNameParts = explode(' - Soal', $base['name']);
+        $baseName = trim($baseNameParts[0]);
+
+        // Find the max question number for existing questions with the same base name and module
+        $lastQuestion = $this->model
+            ->where('module_id', $base['module_id'])
+            ->where('name', 'like', $baseName . ' - Soal %')
+            ->orderByDesc('id')
+            ->first();
+
+        $lastNumber = 0;
+        if ($lastQuestion) {
+            // Extract number from name, e.g. "a - Soal 3"
+            if (preg_match('/- Soal (\d+)$/', $lastQuestion->name, $matches)) {
+                $lastNumber = (int)$matches[1];
+            }
+        }
+
+        $currentNumber = $lastNumber + 1;
+
         foreach ($questions as $q) {
             $this->create([
                 'module_id' => $base['module_id'],
-                'name' => $base['name'] . ' - Soal ' . $q['question_number'],
+                'name' => $baseName . ' - Question ' . $currentNumber,
                 'desc' => $q['narasi'],
                 'code' => $q['kode_utuh'],
                 'test' => $q['kode_blank'],
             ]);
+            $currentNumber++;
         }
 
         return true;
