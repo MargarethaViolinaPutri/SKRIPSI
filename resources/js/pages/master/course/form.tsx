@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { FormResponse } from '@/lib/constant';
 import { Course } from '@/types/course';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { Loader } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -39,7 +39,10 @@ export default function CourseForm({ course }: CourseFormProps) {
                 <Textarea placeholder="Description" value={data.desc} onChange={(v) => setData('desc', v.currentTarget.value)} />
                 <InputError message={errors?.desc} />
             </div>
-            <div className="col-span-12">
+            <div className="col-span-12 flex flex-row gap-2">
+                <Button variant="outline" disabled={processing} asChild>
+                    <Link href={route('master.course.index')}>Back</Link>
+                </Button>
                 <Button disabled={processing}>
                     {processing && <Loader className="mr-2 animate-spin" />}
                     Submit

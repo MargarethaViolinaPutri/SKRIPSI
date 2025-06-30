@@ -151,10 +151,15 @@
 @layer base {
     * {
         @apply border-border;
-        font-family: "Figtree", sans-serif !important;
+        font-family: 'Figtree', sans-serif !important;
     }
 
     body {
         @apply bg-background text-foreground;
     }
+}
+
+[data-sidebar='menu-button'][data-active='true'] {
+    background-color: #3d67ac; /* Light purple background */
+    color: #ffffff; /* Purple text */
 }

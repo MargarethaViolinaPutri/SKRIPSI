@@ -117,7 +117,7 @@ export default function QuestionIndex() {
                 </div>
                 <div className="flex flex-row gap-2">
                     <Link href={route('master.question.create')}>
-                        <Button>
+                        <Button variant="blue">
                             <Plus />
                             Add Data
                         </Button>

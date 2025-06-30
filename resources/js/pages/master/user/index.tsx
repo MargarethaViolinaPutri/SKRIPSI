@@ -190,7 +190,7 @@ export default function UserIndex() {
                 </div>
                 <div className="flex flex-row gap-2">
                     <Link href={route('master.user.create')}>
-                        <Button disabled={processing}>
+                        <Button disabled={processing} variant="blue" size="default">
                             <Plus />
                             Add Data
                         </Button>

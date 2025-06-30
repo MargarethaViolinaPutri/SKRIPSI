@@ -182,7 +182,7 @@ export default function ModuleForm({ module, isDetail, iframeSrc }: ModuleFormPr
                     ) : null}
                 </div>
                 <div className="col-span-12">
-                    <Button type="submit" disabled={processing}>
+                    <Button variant="success" type="submit" disabled={processing}>
                         {processing && <Loader className="mr-2 animate-spin" />}
                         Submit
                     </Button>

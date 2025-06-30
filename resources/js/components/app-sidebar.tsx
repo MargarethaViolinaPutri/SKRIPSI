@@ -4,6 +4,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { LayoutGrid, Ruler, Settings } from 'lucide-react';
+import { route } from 'ziggy-js';
 import AppLogo from './app-logo';
 
 const master: NavItem = {
@@ -72,7 +73,7 @@ const setting: NavItem = {
 export function AppSidebar() {
     const { role } = usePage<SharedData>().props.auth;
 
-    let navigation = [];
+    let navigation: NavItem[] = [];
 
     if (role === 'admin') {
         navigation = [master, setting];
@@ -81,6 +82,16 @@ export function AppSidebar() {
     } else if (role === 'student') {
         navigation = [operational];
     }
+
+    // Debug log each navigation child's href values
+    navigation.forEach((group) => {
+        console.log(`Group: ${group.title}`);
+        group.children?.forEach((item) => {
+            console.log(`  Item: ${item.title}, href: ${item.href}`);
+        });
+    });
+
+    console.log('Navigation items:', navigation);
 
     return (
         <Sidebar collapsible="icon" variant="sidebar">
@@ -97,7 +108,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navigation} />
+                <NavMain items={navigation} hover="hover:bg-blue-100" color="text-blue-700" />
             </SidebarContent>
 
             <SidebarFooter>

@@ -123,7 +123,7 @@ export default function ClassRoomIndex() {
                 </div>
                 <div className="flex flex-row gap-2">
                     <Link href={route('master.classroom.create')}>
-                        <Button>
+                        <Button variant="blue">
                             <Plus />
                             Add Data
                         </Button>

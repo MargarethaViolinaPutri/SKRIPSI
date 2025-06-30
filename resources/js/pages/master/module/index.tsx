@@ -162,7 +162,7 @@ export default function ModuleIndex() {
                 {!isDetail && (
                     <div className="flex flex-row gap-2">
                         <Link href={route('master.module.create')}>
-                            <Button>
+                            <Button variant="blue">
                                 <Plus />
                                 Add Data
                             </Button>

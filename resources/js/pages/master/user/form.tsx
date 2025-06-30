@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { FormResponse } from '@/lib/constant';
 import { User } from '@/types';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import { Loader } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -74,9 +74,12 @@ export default function UserForm({ user }: UserFormProps) {
                 <InputError message={errors?.password_confirmation} />
             </div>
             <div className="col-span-12">
-                <Button disabled={processing}>
+                <Button disabled={processing} variant="success">
                     {processing && <Loader className="mr-2 animate-spin" />}
                     Submit
+                </Button>
+                <Button variant="outline" disabled={processing} asChild>
+                    <Link href={route('master.user.index')}>Back</Link>
                 </Button>
             </div>
         </form>

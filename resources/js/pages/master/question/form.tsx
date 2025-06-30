@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { fetchModule } from '@/lib/select';
 import { GeneratedSoal, Question } from '@/types/question';
-import { router, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import { ReactNode, useEffect, useState } from 'react';
@@ -285,17 +285,20 @@ result
                                     Generate Questions
                                 </Button>
                                 {generatedQuestions.length > 0 && (
-                                    <Button type="button" onClick={handleAutoSubmit} disabled={processing}>
+                                    <Button variant="success" type="button" onClick={handleAutoSubmit} disabled={processing}>
                                         {processing ? 'Menyimpan...' : 'Submit'}
                                     </Button>
                                 )}
                             </>
                         )}
                         {isDetail && (
-                            <Button type="submit" disabled={processing}>
+                            <Button variant="success" type="submit" disabled={processing}>
                                 {processing ? 'Menyimpan...' : 'Update'}
                             </Button>
                         )}
+                        <Button variant="outline" disabled={processing} asChild>
+                            <Link href={route('master.user.index')}>Back</Link>
+                        </Button>
                     </div>
                 </div>
 
