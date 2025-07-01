@@ -19,8 +19,6 @@ type ClassRoomFormProps = {
 type ClassFormData = {
     user_id: string;
     name: string;
-    level: string;
-    code: string;
     members: string[];
 };
 
@@ -74,7 +72,7 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
                 <Input placeholder="Name" value={data.name} onChange={(v) => setData('name', v.target.value)} />
                 <InputError message={errors?.name} />
             </div>
-            <div className="col-span-12 flex flex-col gap-1.5">
+            {/* <div className="col-span-12 flex flex-col gap-1.5">
                 <Label>Code</Label>
                 <Input placeholder="Code" value={data.code} onChange={(v) => setData('code', v.target.value)} />
                 <InputError message={errors?.code} />
@@ -83,7 +81,7 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
                 <Label>Level</Label>
                 <Input placeholder="Level" value={data.level} onChange={(v) => setData('level', v.target.value)} />
                 <InputError message={errors?.level} />
-            </div>
+            </div> */}
             <div className="col-span-12 flex flex-col gap-1.5">
                 <Label>Students</Label>
                 <MultiSelect

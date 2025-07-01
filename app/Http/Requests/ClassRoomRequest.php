@@ -21,13 +21,20 @@ class ClassRoomRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'user_id' => 'required|integer|exists:users,id',
-            'level' => 'required|integer',
-            'name' => 'required|string|max:255',
-            'code' => 'required|string',
-            'members' => 'required|array',
-            'members.*.value' => 'required|integer|exists:users,id',
-        ];
+        $rules = [];
+
+        if ($this->isMethod('post')) {
+            $rules['user_id'] = 'required|integer|exists:users,id';
+            $rules['name'] = 'required|string|max:255';
+            $rules['members'] = 'required|array';
+            $rules['members.*.value'] = 'required|integer|exists:users,id';
+        } else {
+            $rules['user_id'] = 'sometimes|integer|exists:users,id';
+            $rules['name'] = 'sometimes|string|max:255';
+            $rules['members'] = 'sometimes|array';
+            $rules['members.*.value'] = 'sometimes|integer|exists:users,id';
+        }
+
+        return $rules;
     }
 }

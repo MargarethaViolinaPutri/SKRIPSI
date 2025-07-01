@@ -67,4 +67,54 @@ class ClassRoomService extends BaseService implements ClassRoomContract
             return $e;
         }
     }
+
+    public function removeMember($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Remove the member from the classroom
+            ClassRoomUser::where('user_id', $id)->delete();
+
+            DB::commit();
+
+            return true;
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $e;
+        }
+    }
+
+    public function update(array $conditions = [], $payloads)
+    {
+        try {
+            if (!is_null($this->guardForeignKey)) {
+                $payloads[$this->guardForeignKey] = $this->userID();
+            }
+
+            foreach ($this->fileKeys as $fileKey) {
+                if (isset($payloads[$fileKey])) {
+                    $media[$fileKey] = $payloads[$fileKey];
+                    unset($payloads[$fileKey]);
+                }
+            }
+
+            DB::beginTransaction();
+            $model = $this->model::query()->where($conditions);
+            $result = $model->update($payloads);
+
+            foreach ($this->fileKeys as $fileKey) {
+                $model->addMultipleMediaFromRequest([$fileKey])
+                    ->each(function ($image) use ($fileKey) {
+                        $image->toMediaCollection($fileKey);
+                    });
+            }
+            DB::commit();
+
+            return $result;
+        } catch (Exception $e) {
+            DB::rollBack();
+            return $e;
+        }
+    }
 }

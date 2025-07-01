@@ -15,7 +15,7 @@ Route::group([
     'middleware' => ['auth'],
 ], function () {
 
-    Route::group([
+Route::group([
         'prefix' => 'classroom',
         'as' => 'classroom.',
     ], function () {
@@ -26,6 +26,9 @@ Route::group([
         Route::post('', [ClassRoomController::class, 'store'])->name('store');
         Route::put('{id}', [ClassRoomController::class, 'update'])->name('update');
         Route::delete('{id}', [ClassRoomController::class, 'destroy'])->name('destroy');
+
+        Route::get('{id}/members', [ClassRoomController::class, 'members'])->name('members.fetch');
+        Route::delete('member/{id}', [ClassRoomController::class, 'destroyMember'])->name('member.destroy');
     });
 
     Route::group([

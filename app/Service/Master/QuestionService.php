@@ -25,14 +25,14 @@ class QuestionService extends BaseService implements QuestionContract
         // Find the max question number for existing questions with the same base name and module
         $lastQuestion = $this->model
             ->where('module_id', $base['module_id'])
-            ->where('name', 'like', $baseName . ' - Soal %')
+            ->where('name', 'like', $baseName . ' - Question %')
             ->orderByDesc('id')
             ->first();
 
         $lastNumber = 0;
         if ($lastQuestion) {
-            // Extract number from name, e.g. "a - Soal 3"
-            if (preg_match('/- Soal (\d+)$/', $lastQuestion->name, $matches)) {
+            // Extract number from name, e.g. "a - Question 3"
+            if (preg_match('/- Question (\d+)$/', $lastQuestion->name, $matches)) {
                 $lastNumber = (int)$matches[1];
             }
         }
@@ -44,8 +44,8 @@ class QuestionService extends BaseService implements QuestionContract
                 'module_id' => $base['module_id'],
                 'name' => $baseName . ' - Question ' . $currentNumber,
                 'desc' => $q['narasi'],
-                'code' => $q['kode_utuh'],
-                'test' => $q['kode_blank'],
+                'test' => $q['kode_utuh'],
+                'code' => $q['kode_blank'],
             ]);
             $currentNumber++;
         }
@@ -74,9 +74,9 @@ class QuestionService extends BaseService implements QuestionContract
             return [
                 'question_number' => $index + 1,
                 'narasi' => $q->desc,
-                'kode_blank' => $q->code,
-                'kode_utuh' => $q->test,
-                'test' => $q->test, // include test for compatibility
+                'kode_blank' => $q->test,
+                'kode_utuh' => $q->code,
+                'test' => $q->code, // include test for compatibility
             ];
         });
 

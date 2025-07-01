@@ -51,18 +51,12 @@ export default function ClassRoomIndex() {
             enableColumnFilter: false,
             enableHiding: false,
         }),
-        helper.accessor('level', {
-            id: 'level',
-            header: 'Level',
-        }),
+
         helper.accessor('name', {
             id: 'name',
             header: 'Name',
         }),
-        helper.accessor('code', {
-            id: 'code',
-            header: 'Code',
-        }),
+
         helper.display({
             id: 'actions',
             header: 'Actions',
