@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function TestResult({ attempt }: Props) {
-    const questions = attempt.test.questions || [];
+    const questions = attempt.test.question || [];
     const studentAnswers = attempt.answers || [];
 
     return (
@@ -30,9 +30,9 @@ export default function TestResult({ attempt }: Props) {
             <div className="text-center border rounded-lg p-8 mb-10">
                 <h1 className="text-3xl font-bold">Test Completed!</h1>
                 <p className="text-gray-500 mt-1">Here is your result for: {attempt.test.title}</p>
-                <div className="my-6">{getBadgeForScore(attempt.score)}</div>
+                <div className="my-6">{getBadgeForScore(attempt.total_score)}</div>
                 <p className="text-sm text-gray-500">YOUR SCORE</p>
-                <p className="text-6xl font-bold tracking-tight">{attempt.score?.toFixed(2)}</p>
+                <p className="text-6xl font-bold tracking-tight">{attempt.total_score.toFixed(2)}</p>
             </div>
 
             <div className="space-y-6">

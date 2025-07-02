@@ -6,4 +6,6 @@ export type TestAnswer = Entity & {
     test_question_id: number;
     test_question_option_id: number;
     option?: TestQuestionOption;
+    student_code: string;
+    score: number;
 };

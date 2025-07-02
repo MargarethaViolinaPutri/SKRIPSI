@@ -11,55 +11,26 @@ use Illuminate\Support\Facades\DB;
 
 class TestQuestionController extends Controller
 {
-    public function store(TestQuestionRequest $request, Test $test)
-    {
-        DB::transaction(function () use ($request, $test) {
-            $validated = $request->validated();
-
-            $questionData = [
-                'question_text' => $validated['question_text'],
-            ];
-            
-            if ($request->hasFile('image')) {
-                $path = $request->file('image')->store('test_question_images', 'public');
-                $questionData['image_path'] = $path;
-            }
-
-            $question = $test->questions()->create($questionData);
-
-            foreach ($validated['options'] as $index => $optionData) {
-                $question->options()->create([
-                    'option_text' => $optionData['option_text'],
-                    'is_correct' => ($index == $validated['correct_option_index']),
-                ]);
-            }
-        });
-        return redirect()->route('master.test.show', $test->id)->with('success', 'Question added successfully.');
-    }
-
-    public function storeBatch(Request $request, Test $test)
+    public function store(Request $request, Test $test)
     {
         $validated = $request->validate([
-            'name' => 'required|string',
-            'desc' => 'required|string',
-            'questions' => 'required|array|min:1',
-            'questions.*.narasi' => 'required|string',
-            'questions.*.kode_blank' => 'required|string',
-            'questions.*.kode_utuh' => 'required|string',
+            'name' => 'required|string|max:255',
+            'desc' => 'nullable|string',
+            'code' => 'required|string',
+            'test' => 'required|string',
         ]);
 
-        DB::transaction(function () use ($validated, $test) {
-            foreach ($validated['questions'] as $qData) {
-                $test->questions()->create([
-                    'name' => $validated['name'],
-                    'desc' => $qData['narasi'],
-                    'code' => $qData['kode_blank'],
-                    'test' => $qData['kode_utuh'],
-                ]);
-            }
-        });
+        $test->question()->updateOrCreate(
+            ['test_id' => $test->id],
+            [
+                'name' => $validated['name'],
+                'desc' => $validated['desc'],
+                'code' => $validated['code'],
+                'test' => $validated['test'],
+            ]
+        );
 
-        return redirect()->route('master.test.show', $test->id)->with('success', 'Generated questions have been saved successfully.');
+        return redirect()->route('master.test.show', $test->id)->with('success', 'Question saved successfully.');
     }
 
     public function destroy(Test $test, TestQuestion $question)

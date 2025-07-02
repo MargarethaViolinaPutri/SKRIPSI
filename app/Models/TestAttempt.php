@@ -14,10 +14,11 @@ class TestAttempt extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'score' => 'float',
+        'output_accuracy_score' => 'float',
+        'structure_score' => 'float',
+        'total_score' => 'float',
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
-        'question_order' => 'array',
     ];
 
     protected $appends = ['time_spent_in_seconds'];

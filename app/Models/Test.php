@@ -45,9 +45,9 @@ class Test extends Model
                     ->latestOfMany();
     }
 
-    public function questions()
+    public function question(): HasOne
     {
-        return $this->hasMany(TestQuestion::class);
+        return $this->hasOne(TestQuestion::class);
     }
 
     public function course()

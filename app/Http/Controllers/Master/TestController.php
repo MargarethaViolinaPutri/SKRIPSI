@@ -60,13 +60,9 @@ class TestController extends Controller
 
     public function show(Test $test)
     {
-        if (request()->wantsJson()) {
-            return response()->json(['test' => $test]);
-        }
+        $test->load('question');
 
-        $test->load('questions.options');
-        
-        return Inertia::render('master/test/show', [
+        return Inertia::render('master/test/questionEditor', [
             "test" => $test
         ]);
     }
