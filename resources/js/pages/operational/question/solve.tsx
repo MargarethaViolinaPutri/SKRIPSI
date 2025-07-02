@@ -164,14 +164,11 @@ export default function SolveQuestion({ question }: Props) {
             <Dialog open={isResultModalOpen} onOpenChange={setIsResultModalOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle className="text-center text-2xl">Submission Result</DialogTitle>
-                        <DialogDescription className="text-center">You've completed the question. Here is your result.</DialogDescription>
+                        <DialogTitle className="text-center text-2xl">Quiz Completed!</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="flex flex-col items-center justify-center space-y-4">
-                            {getBadgeForScore(resultData?.total_score)}
-                            <p className="text-4xl font-bold">{resultData?.total_score.toFixed(2)}</p>
-                            <p className="text-sm text-gray-500">Total Score</p>
+                            <p className="text-sm text-gray-500">Your score is being processed</p>
                         </div>
                     </div>
                     <DialogFooter>

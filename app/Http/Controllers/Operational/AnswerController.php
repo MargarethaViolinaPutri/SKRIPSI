@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Operational;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\EvaluateModuleAnswer;
 use App\Service\Operational\AnswerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,11 +32,13 @@ class AnswerController extends Controller
             'end_time' => 'required|date_format:Y-m-d H:i:s',
         ]);
 
-        $userId = Auth::id();
-
         try {
-            $answer = $this->answerService->evaluateAndSaveAnswer(
-                $questionId, $userId, $validated['student_code'], $validated['start_time'], $validated['end_time']
+            $answer = EvaluateModuleAnswer::dispatch(
+                $questionId,
+                Auth::id(),
+                $validated['student_code'],
+                $validated['start_time'],
+                $validated['end_time']
             );
 
             return response()->json([

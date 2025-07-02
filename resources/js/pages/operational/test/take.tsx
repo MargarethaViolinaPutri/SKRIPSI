@@ -154,17 +154,15 @@ export default function TestTake({ attempt }: Props) {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="flex flex-col items-center justify-center space-y-4">
-                                {getBadgeForScore(resultData?.total_score)}
-                                <p className="text-4xl font-bold">{resultData?.total_score?.toFixed(2)}</p>
-                                <p className="text-sm text-gray-500">Total Score</p>
+                                <p className="text-sm text-gray-500">Your score is being processed</p>
                             </div>
                         </div>
                         <DialogFooter>
                             <Button
-                                onClick={() => router.get(route('operational.test.result', { attempt: resultData.id }))}
+                                onClick={() => router.get(route('operational.lms.show', { id: attempt.test.course_id }))}
                                 className="w-full"
                             >
-                                View Detailed Review
+                                Back to module detail
                             </Button>
                         </DialogFooter>
                     </DialogContent>

@@ -47,35 +47,19 @@ export default function TestReview({ attempt }: Props) {
                         <h3 className="font-semibold text-lg">{question?.name}</h3>
                         <p className="text-sm text-gray-600 mt-1">{question?.desc}</p>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="border rounded-lg p-4">
-                            <div className="flex items-center font-semibold mb-2">
-                                <User className="h-5 w-5 mr-2 text-blue-500" />
-                                Your Submitted Code
-                            </div>
-                            <Editor
-                                height="400px"
-                                defaultLanguage="python"
-                                value={attempt.student_code}
-                                theme="vs-dark"
-                                options={{ readOnly: true, minimap: { enabled: false } }}
-                                className="border rounded-md"
-                            />
+                    <div className="border rounded-lg p-4">
+                        <div className="flex items-center font-semibold mb-2">
+                            <User className="h-5 w-5 mr-2 text-blue-500" />
+                            Your Submitted Code
                         </div>
-                        <div className="border rounded-lg p-4">
-                             <div className="flex items-center font-semibold mb-2">
-                                <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
-                                Correct Solution
-                            </div>
-                            <Editor
-                                height="400px"
-                                defaultLanguage="python"
-                                value={question?.test}
-                                theme="vs-dark"
-                                options={{ readOnly: true, minimap: { enabled: false } }}
-                                className="border rounded-md"
-                            />
-                        </div>
+                        <Editor
+                            height="400px"
+                            defaultLanguage="python"
+                            value={attempt.student_code}
+                            theme="vs-dark"
+                            options={{ readOnly: true, minimap: { enabled: false } }}
+                            className="border rounded-md"
+                        />
                     </div>
                 </div>
             </div>

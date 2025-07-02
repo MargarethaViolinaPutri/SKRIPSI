@@ -96,10 +96,10 @@ export default function TestCard({ test }: Props) {
                     </div>
                     <div className="text-right">
                         <span className="text-xs text-gray-500">SCORE</span>
-                        <p className="font-bold text-2xl">{completedAttempt.score?.toFixed(2)}</p>
+                        <p className="font-bold text-2xl">{completedAttempt.total_score.toFixed(2)}</p>
                     </div>
                     <div className="w-10 h-10">
-                        {getBadgeForScore(completedAttempt.score)}
+                        {getBadgeForScore(completedAttempt.total_score)}
                     </div>
                     <Link href={route('operational.test.result', { attempt: completedAttempt.id })}>
                         <Button variant="outline">

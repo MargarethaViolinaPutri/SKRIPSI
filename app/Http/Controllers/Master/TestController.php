@@ -62,6 +62,10 @@ class TestController extends Controller
     {
         $test->load('question');
 
+        if (request()->wantsJson()) {
+            return response()->json(['test' => $test]);
+        }
+        
         return Inertia::render('master/test/questionEditor', [
             "test" => $test
         ]);

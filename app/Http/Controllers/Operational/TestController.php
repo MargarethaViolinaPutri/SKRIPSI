@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Operational;
 
 use App\Contract\Master\CourseContract;
 use App\Http\Controllers\Controller;
+use App\Jobs\EvaluateTestAnswer;
 use App\Models\Test;
 use App\Models\TestAnswer;
 use App\Models\TestAttempt;
@@ -85,7 +86,10 @@ class TestController extends Controller
 
         $validated = $request->validate(['student_code' => 'required|string']);
 
-        $updatedAttempt = $this->testAnswerService->evaluateAndUpdateAttempt($attempt, $validated['student_code']);
+        $updatedAttempt = EvaluateTestAnswer::dispatch(
+            $attempt,
+            $validated['student_code']
+        );
 
         return response()->json([
             'message' => 'Test successfully evaluated.',
