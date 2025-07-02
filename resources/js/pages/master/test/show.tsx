@@ -14,6 +14,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import TestQuestionGenerator from './TestQuestionGenerator';
 
 interface Props {
     test: Test;
@@ -64,43 +65,16 @@ export default function TestShow({ test }: Props) {
             <p className="text-gray-500 mb-6">{test.description}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Kolom Kiri: Daftar Pertanyaan */}
-                <div className="md:col-span-2 space-y-4">
-                    <h2 className="text-xl font-semibold">Questions ({test.questions?.length || 0})</h2>
-                    {test.questions && test.questions.length > 0 ? (
-                        test.questions.map((question, index) => (
-                            <div key={question.id} className="border rounded-lg p-4">
-                                <div className="flex justify-between items-start">
-                                    <p className="font-semibold">{index + 1}. {question.question_text}</p>
-                                    <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => setQuestionIdToDelete(question.id)}>
-                                        <Trash className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                
-                                {question.image_url && (
-                                    <div className="mt-4">
-                                        <img src={question.image_url} alt={`Question ${question.id} image`} className="max-w-md rounded-lg border" />
-                                    </div>
-                                )}
-
-                                <ul className="mt-2 space-y-1 pl-4">
-                                    {question.options?.map(option => (
-                                        <li key={option.id} className={`flex items-center text-sm ${option.is_correct ? 'font-bold text-green-700' : ''}`}>
-                                            {option.is_correct 
-                                                ? <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" /> 
-                                                : <XCircle className="h-4 w-4 mr-2 text-gray-400" />}
-                                            {option.option_text}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No questions added yet.</p>
-                    )}
+                {/* Left column: Question list */}
+                <div className="lg:col-span-3 space-y-4">
+                    <h2 className="text-xl font-semibold">Existing Questions ({test.questions?.length || 0})</h2>
+                    {/* ... for show available question ... */}
                 </div>
-                <div className="md:col-span-1">
-                    <QuestionForm testId={test.id} />
+                <div className="lg:col-span-2">
+                    <div className="border rounded-lg p-6 bg-white dark:bg-gray-900 sticky top-4">
+                        <h3 className="text-lg font-semibold mb-4 border-b pb-3">AI Question Generator</h3>
+                        <TestQuestionGenerator test={test} />
+                    </div>
                 </div>
             </div>
         </div>

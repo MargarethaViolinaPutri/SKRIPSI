@@ -37,6 +37,31 @@ class TestQuestionController extends Controller
         return redirect()->route('master.test.show', $test->id)->with('success', 'Question added successfully.');
     }
 
+    public function storeBatch(Request $request, Test $test)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'desc' => 'required|string',
+            'questions' => 'required|array|min:1',
+            'questions.*.narasi' => 'required|string',
+            'questions.*.kode_blank' => 'required|string',
+            'questions.*.kode_utuh' => 'required|string',
+        ]);
+
+        DB::transaction(function () use ($validated, $test) {
+            foreach ($validated['questions'] as $qData) {
+                $test->questions()->create([
+                    'name' => $validated['name'],
+                    'desc' => $qData['narasi'],
+                    'code' => $qData['kode_blank'],
+                    'test' => $qData['kode_utuh'],
+                ]);
+            }
+        });
+
+        return redirect()->route('master.test.show', $test->id)->with('success', 'Generated questions have been saved successfully.');
+    }
+
     public function destroy(Test $test, TestQuestion $question)
     {
         $question->delete();

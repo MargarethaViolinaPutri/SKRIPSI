@@ -93,6 +93,9 @@ Route::group([
         'as' => 'test.',
     ], function () {
         Route::get('fetch', [TestController::class, 'fetch'])->name('fetch');
+
+        Route::post('{test}/questions/store-batch', [TestQuestionController::class, 'storeBatch'])->name('questions.storeBatch');
+
         Route::post('{test}/questions', [TestQuestionController::class, 'store'])->name('questions.store');
         Route::delete('{test}/questions/{question}', [TestQuestionController::class, 'destroy'])->name('questions.destroy');
         Route::resource('', TestController::class) ->parameters(['' => 'test']);;

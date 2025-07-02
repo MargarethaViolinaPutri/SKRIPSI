@@ -31,8 +31,7 @@ class AnswerController extends Controller
             'end_time' => 'required|date_format:Y-m-d H:i:s',
         ]);
 
-        // $userId = Auth::id();
-        $userId = 3;
+        $userId = Auth::id();
 
         try {
             $answer = $this->answerService->evaluateAndSaveAnswer(
