@@ -51,7 +51,7 @@ export default function TestQuestionGenerator({ test }: Props) {
 
     const handleSubmitGenerated = () => {
         post(route('master.test.questions.storeBatch', { test: test.id }), {
-            data: { ...data, questions: generatedQuestions },
+            
         });
     };
 
