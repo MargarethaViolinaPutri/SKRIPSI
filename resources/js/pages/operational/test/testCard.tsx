@@ -101,11 +101,11 @@ export default function TestCard({ test }: Props) {
                     <div className="w-10 h-10">
                         {getBadgeForScore(completedAttempt.total_score)}
                     </div>
-                    <Link href={route('operational.test.result', { attempt: completedAttempt.id })}>
+                    {/* <Link href={route('operational.test.result', { attempt: completedAttempt.id })}>
                         <Button variant="outline">
                             <RotateCcw className="h-4 w-4 mr-2" /> Review
                         </Button>
-                    </Link>
+                    </Link> */}
                 </div>
             ) : (
                 <Link href={route('operational.test.start', { test: test.id })}>
