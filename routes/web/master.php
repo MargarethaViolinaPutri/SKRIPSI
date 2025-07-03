@@ -41,6 +41,8 @@ Route::group([
         Route::get('{id}', [CourseController::class, 'show'])->name('show');
         Route::post('', [CourseController::class, 'store'])->name('store');
         Route::put('{id}', [CourseController::class, 'update'])->name('update');
+        Route::get('{id}/threshold', [CourseController::class, 'threshold'])->name('threshold');
+        Route::match(['put', 'post'], '{id}/threshold', [CourseController::class, 'updateThreshold'])->name('update.threshold');
         Route::delete('{id}', [CourseController::class, 'destroy'])->name('destroy');
     });
 

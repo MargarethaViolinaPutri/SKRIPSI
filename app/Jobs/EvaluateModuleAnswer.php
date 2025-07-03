@@ -4,12 +4,16 @@ namespace App\Jobs;
 use App\Models\Answer;
 use App\Models\Question;
 use App\Service\PythonEvaluationService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 
-class EvaluateModuleAnswer
+class EvaluateModuleAnswer implements ShouldQueue
 {
-    use Dispatchable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected int $questionId;
     protected int $userId;

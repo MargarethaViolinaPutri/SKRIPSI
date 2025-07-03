@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Auth;
 
@@ -37,12 +38,11 @@ class Test extends Model
                      });
     }
 
-    public function userLatestCompletedAttempt(): HasOne
+    public function userCompletedAttempts(): HasMany
     {
-        return $this->hasOne(TestAttempt::class)
-                    ->where('user_id', Auth::id())
-                    ->whereNotNull('finished_at')
-                    ->latestOfMany();
+        return $this->hasMany(TestAttempt::class)
+            ->where('user_id', Auth::id())
+            ->whereNotNull('finished_at');
     }
 
     public function question(): HasOne

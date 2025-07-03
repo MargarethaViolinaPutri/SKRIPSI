@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Models\Test;
 use App\Models\TestAttempt;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
@@ -69,8 +71,11 @@ class ModuleController extends Controller
         $module = Module::with('course')->findOrFail($id);
 
         $course = $module->course;
-        $pretest = Test::where('course_id', $course->id)->where('type', 'pretest')->where('status', 'published')->first();
 
+        $classification = DB::table('course_user')->where('course_id', $module->course_id)->where('user_id', Auth::id())->first();
+        abort_if($classification && $classification->class_group === User::GROUP_CON, 403, 'Your pre-test score allows you to skip the modules.');
+        
+        $pretest = Test::where('course_id', $course->id)->where('type', Test::PRE_TEST)->where('status', 'published')->first();
         if ($pretest) {
             $hasCompletedPretest = TestAttempt::where('test_id', $pretest->id)
                 ->where('user_id', Auth::id())

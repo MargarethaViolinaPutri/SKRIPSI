@@ -65,6 +65,37 @@ class CourseController extends Controller
         return WebResponse::response($data, 'master.course.index');
     }
 
+    public function threshold($id)
+    {
+        $data = $this->service->find($id);
+        $averageData = $this->service->getAverageScoreAndStudentCount($id);
+        $testProgress = $this->service->getTestProgress($id);
+        $studentTestDetails = $this->service->getStudentTestDetails($id);
+        return Inertia::render('master/course/threshold', [
+            'course' => $data,
+            'averageData' => $averageData,
+            'testProgress' => $testProgress,
+            'studentTestDetails' => $studentTestDetails,
+        ]);
+    }
+
+    public function updateThreshold(\App\Http\Requests\ThresholdRequest $request, $id)
+    {
+        $payload = $request->validated();
+
+        $updateSuccess = $this->service->update(
+            [['id', '=', $id]],
+            $payload
+        );
+
+        if ($updateSuccess) {
+            $course = $this->service->find($id);
+            $this->service->classifyStudentsByThreshold($course);
+        }
+
+        return WebResponse::response($updateSuccess, 'master.course.index');
+    }
+
     public function destroy($id)
     {
         $data = $this->service->destroy($id);

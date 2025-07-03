@@ -8,6 +8,7 @@ use App\Jobs\EvaluateTestAnswer;
 use App\Models\Test;
 use App\Models\TestAnswer;
 use App\Models\TestAttempt;
+use App\Models\User;
 use App\Service\Operational\TestAnswerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,32 +31,27 @@ class TestController extends Controller
             abort(403, 'This test is not available.');
         }
 
-        if (in_array($test->type, ['posttest', 'delaytest'])) {
-            $allModulesCompleted = $this->courseService->areAllModulesCompleted($test->course);
-            abort_if(!$allModulesCompleted, 403, 'You must complete all modules with a score of 80+ to start this test.');
+        if (in_array($test->type, [Test::POST_TEST, Test::DELAY_TEST])) {
+            $classGroup = $this->courseService->getUserClassGroup($test->course);
+
+            if ($classGroup === User::GROUP_EXP) {
+                $allModulesCompleted = $this->courseService->areAllModulesCompleted($test->course);
+                abort_if(!$allModulesCompleted, 403, 'You must complete all modules with a score of 80+ to start this test.');
+            }
         }
 
-        $inProgressAttempt = TestAttempt::where('test_id', $test->id)
-                                      ->where('user_id', Auth::id())
-                                      ->whereNull('finished_at')
-                                      ->first();
+        $existingAttempt = TestAttempt::where('test_id', $test->id)
+            ->where('user_id', Auth::id())
+            ->first();
 
-        // 2. Jika ditemukan, langsung arahkan ke attempt tersebut tanpa membuat yang baru
-        if ($inProgressAttempt) {
-            return redirect()->route('operational.test.take', ['attempt' => $inProgressAttempt->id]);
+        if ($existingAttempt) {
+            if ($existingAttempt->finished_at) {
+                abort(403, 'You have already completed this test and cannot retake it.');
+            } else {
+                return redirect()->route('operational.test.take', ['attempt' => $existingAttempt->id]);
+            }
         }
         
-        $existingAttempt = TestAttempt::where('test_id', $test->id)
-                                      ->where('user_id', Auth::id())
-                                      ->whereNotNull('finished_at')
-                                      ->exists();
-
-        abort_if($existingAttempt, 403, 'You have already completed this test and cannot retake it.');
-
-        $questionIds = $test->question()->pluck('id');
-
-        $shuffledIds = $questionIds->shuffle();
-
         $attempt = TestAttempt::create([
             'test_id' => $test->id,
             'user_id' => Auth::id(),
