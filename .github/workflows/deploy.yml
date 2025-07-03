@@ -25,4 +25,4 @@ jobs:
           export PATH="$PATH:/root/.bun/bin:/usr/local/bin"
           
           cd /var/www/html/app
-          sh sync.sh
+          sh sync.sh migrate
