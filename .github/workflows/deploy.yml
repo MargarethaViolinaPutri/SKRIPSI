@@ -1,11 +1,9 @@
 name: Run SSH Command
-
 on:
   push:
     branches: [ main ]
 
 jobs:
-
   ssh-command:
     runs-on: ubuntu-latest
     
@@ -18,5 +16,13 @@ jobs:
         host: 203.145.34.233
         port: 22
         script: |
+          # Load environment variables
+          source ~/.bashrc 2>/dev/null || true
+          source ~/.profile 2>/dev/null || true
+          source ~/.bash_profile 2>/dev/null || true
+          
+          # Add common paths where bun might be installed
+          export PATH="$PATH:/root/.bun/bin:/usr/local/bin"
+          
           cd /var/www/html/app
           sh sync.sh
