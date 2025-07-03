@@ -8,6 +8,7 @@ use Illuminate\Support\Collection;
 
 interface CourseContract extends BaseContract {
     public function areAllModulesCompleted(Course $course): bool;
+    public function getUserClassGroup(Course $course): ?string;
     public function getAverageScoreAndStudentCount(int $courseId): array;
     public function getTestProgress(int $courseId): array;
     public function getStudentTestDetails(int $courseId): Collection;

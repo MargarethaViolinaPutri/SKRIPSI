@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Service\BaseService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CourseService extends BaseService implements CourseContract
@@ -49,6 +50,15 @@ class CourseService extends BaseService implements CourseContract
         return true;
     }
 
+    public function getUserClassGroup(Course $course): ?string
+    {
+        $classification = DB::table('course_user')
+            ->where('course_id', $course->id)
+            ->where('user_id', Auth::id())
+            ->first();
+        return $classification ? $classification->class_group : null;
+    }
+    
     public function getAverageScoreAndStudentCount(int $courseId): array
     {
         $pretest = Test::where('course_id', $courseId)->where('type', Test::PRE_TEST)->first();

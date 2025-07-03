@@ -50,51 +50,52 @@ class LMSController extends Controller
         $course = Course::with([
             'modules',
             'tests' => function ($query) {
-                $query->where('status', 'published')->with('userLatestCompletedAttempt');
+                $query->where('status', 'published')->with('userCompletedAttempts');
             }
         ])->findOrFail($id);
         
-        $classification = DB::table('course_user')
-            ->where('course_id', $course->id)
-            ->where('user_id', $userId)
-            ->first();
-        $classGroup = $classification ? $classification->class_group : null;
+        $classGroup = $this->service->getUserClassGroup($course);
         
-        $pretest = $course->tests->firstWhere('type', Test::PRE_TEST);
-        $hasCompletedPretest = !$pretest || ($pretest->userLatestCompletedAttempt !== null);
+        $completedTestTypes = $course->tests->map(function ($test) {
+            return $test->userCompletedAttempts->isNotEmpty() ? $test->type : null;
+        })->filter()->unique()->toArray();
+
+        $hasCompletedPretest = in_array(Test::PRE_TEST, $completedTestTypes);
 
         $areModulesUnlocked = $hasCompletedPretest && ($classGroup === User::GROUP_EXP);
 
-        $allModulesCompleted = $this->service->areAllModulesCompleted($course);
-
-        $completedTestTypes = $course->tests
-            ->whereNotNull('userLatestCompletedAttempt')
-            ->pluck('type')
-            ->unique()
-            ->toArray();
+        $allModulesCompleted = ($classGroup === 'control') ? true : $this->service->areAllModulesCompleted($course);
 
         $processedTests = $course->tests->map(function ($test) use ($completedTestTypes, $allModulesCompleted, $classGroup) {
             
-            $test->is_locked_by_sequence = false;
+            $latestAttempt = $test->userCompletedAttempts->sortByDesc('id')->first();
+
+            $test->user_latest_completed_attempt = $latestAttempt;
+
+            if ($latestAttempt) {
+                $test->is_locked = false;
+                $test->is_visible = true;
+                return $test;
+            }
+
+            $isLockedBySequence = false;
             $currentTestTypeIndex = array_search($test->type, $this->testSequence);
             if ($currentTestTypeIndex > 0) {
                 $prerequisiteType = $this->testSequence[$currentTestTypeIndex - 1];
                 if (!in_array($prerequisiteType, $completedTestTypes)) {
-                    $test->is_locked_by_sequence = true;
+                    $isLockedBySequence = true;
                 }
             }
 
-            $test->is_locked_by_modules = false;
-            if (in_array($test->type, [Test::POST_TEST, Test::DELAY_TEST])) {
-                if ($classGroup === User::GROUP_EXP && !$allModulesCompleted) {
-                    $test->is_locked_by_modules = true;
-                }
+            $isLockedByModules = false;
+            if (in_array($test->type, [Test::POST_TEST, Test::DELAY_TEST]) && !$allModulesCompleted) {
+                $isLockedByModules = true;
             }
 
-            $isWithinSchedule = $test->available_from ? now()->isBetween($test->available_from, $test->available_until) : true;
-            $isAlreadyCompleted = $test->userLatestCompletedAttempt !== null;
-            $test->is_visible = $isWithinSchedule || $isAlreadyCompleted;
+            $test->is_locked = $isLockedBySequence || $isLockedByModules;
 
+            $test->is_visible = $test->available_from ? now()->isBetween($test->available_from, $test->available_until) : true;
+            
             return $test;
 
         })->filter(function ($test) {
