@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\Test;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class LMSController extends Controller
@@ -45,6 +46,7 @@ class LMSController extends Controller
 
     public function show($id)
     {
+        $userId = Auth::id();
         $course = Course::with([
             'modules',
             'tests' => function ($query) {
@@ -52,8 +54,16 @@ class LMSController extends Controller
             }
         ])->findOrFail($id);
         
-        $pretest = $course->tests->firstWhere('type', 'pretest');
+        $classification = DB::table('course_user')
+            ->where('course_id', $course->id)
+            ->where('user_id', $userId)
+            ->first();
+        $classGroup = $classification ? $classification->class_group : null;
+        
+        $pretest = $course->tests->firstWhere('type', Test::PRE_TEST);
         $hasCompletedPretest = !$pretest || ($pretest->userLatestCompletedAttempt !== null);
+
+        $areModulesUnlocked = $hasCompletedPretest && ($classGroup === User::GROUP_EXP);
 
         $allModulesCompleted = $this->service->areAllModulesCompleted($course);
 
@@ -63,7 +73,7 @@ class LMSController extends Controller
             ->unique()
             ->toArray();
 
-        $processedTests = $course->tests->map(function ($test) use ($completedTestTypes, $allModulesCompleted) {
+        $processedTests = $course->tests->map(function ($test) use ($completedTestTypes, $allModulesCompleted, $classGroup) {
             
             $test->is_locked_by_sequence = false;
             $currentTestTypeIndex = array_search($test->type, $this->testSequence);
@@ -75,8 +85,10 @@ class LMSController extends Controller
             }
 
             $test->is_locked_by_modules = false;
-            if (in_array($test->type, ['posttest', 'delaytest']) && !$allModulesCompleted) {
-                $test->is_locked_by_modules = true;
+            if (in_array($test->type, [Test::POST_TEST, Test::DELAY_TEST])) {
+                if ($classGroup === User::GROUP_EXP && !$allModulesCompleted) {
+                    $test->is_locked_by_modules = true;
+                }
             }
 
             $isWithinSchedule = $test->available_from ? now()->isBetween($test->available_from, $test->available_until) : true;
@@ -93,7 +105,8 @@ class LMSController extends Controller
             'course' => $course,
             'modules' => $course->modules,
             'availableTests' => $processedTests->values(),
-            'areModulesUnlocked' => $hasCompletedPretest,
+            'areModulesUnlocked' => $areModulesUnlocked,
+            'classGroup' => $classGroup,
         ]);
     }
 }

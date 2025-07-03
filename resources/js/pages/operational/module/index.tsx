@@ -6,20 +6,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Eye, Lock } from 'lucide-react';
+import { BookCheck, BookText, ChevronRight, Eye, FastForward, Lock } from 'lucide-react';
 import NextTable from '@/components/next-table';
 import axios from 'axios';
 import { Test } from '@/types/test';
 import TestCard from '../test/testCard';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Props {
     course: Course;
     availableTests: Test[];
     areModulesUnlocked: boolean;
+    classGroup: 'control' | 'experiment' | null;
 }
 
-export default function ModuleIndex({ course, availableTests, areModulesUnlocked }: Props) {
+export default function ModuleIndex({ course, availableTests, areModulesUnlocked, classGroup }: Props) {
     const loadModules = async (params: Record<string, unknown>) => {
         const queryParams = {
             ...params,
@@ -142,7 +144,7 @@ export default function ModuleIndex({ course, availableTests, areModulesUnlocked
                 );
             },
         }),
-        helper.accessor('score', {
+        helper.accessor('performance.average_score', {
             id: 'score',
             header: 'Average Score',
             cell: ({ row }) => {
@@ -154,7 +156,7 @@ export default function ModuleIndex({ course, availableTests, areModulesUnlocked
             },
         }),
 
-        helper.accessor('achievement', {
+        helper.accessor('performance.average_score', {
             id: 'achievement',
             header: 'Achievement',
             cell: ({ row }) => {
@@ -162,7 +164,7 @@ export default function ModuleIndex({ course, availableTests, areModulesUnlocked
                 return getBadgeForScore(score);
             }
         }),
-        helper.accessor('total_attempts', {
+        helper.accessor('performance.total_attempts', {
             id: 'total_attempts',
             header: 'Total Attempts',
             cell: ({ row }) => {
@@ -172,13 +174,34 @@ export default function ModuleIndex({ course, availableTests, areModulesUnlocked
                 return attempts;
             },
         }),
-        helper.accessor('total_time', {
+        helper.accessor('performance.total_time_spent_seconds', {
             id: 'total_time',
-            header: 'Total Time Spent',
+            header: 'Time Spent',
             cell: ({ row }) => {
                 const seconds = row.original.performance?.total_time_spent_seconds;
                 if (seconds === undefined) return <span className="text-gray-400">-</span>;
                 return formatDuration(seconds);
+            },
+        }),
+        helper.display({
+            id: 'materials',
+            header: 'Materials',
+            cell: ({ row }) => {
+                const materials = row.original.materials;
+                if (materials && materials.length > 0) {
+                    return (
+                        <div className="text-center">
+                            <Link href={route('operational.module.material', { id: row.original.id })}>
+                                <Button variant="outline" size="sm">
+                                    <BookText className="mr-2 h-4 w-4" />
+                                    View
+                                </Button>
+                            </Link>
+                        </div>
+                    );
+                }
+
+                return <span className="text-center text-gray-400">-</span>;
             },
         }),
         helper.display({
@@ -246,6 +269,21 @@ export default function ModuleIndex({ course, availableTests, areModulesUnlocked
                     Here is a list of available modules for this course.
                 </p>
             </div>
+
+            {classGroup && (
+                <Alert className="mb-8 border-l-4" variant={classGroup === 'control' ? 'success' : 'info'}>
+                    {classGroup === 'control' ? <FastForward className="h-4 w-4" /> : <BookCheck className="h-4 w-4" />}
+                    <AlertTitle className="font-bold">
+                        {classGroup === 'control' ? 'You are in the Control Group' : 'You are in the Experiment Group'}
+                    </AlertTitle>
+                    <AlertDescription>
+                        {classGroup === 'control'
+                            ? 'Your pre-test score is high! You can skip the modules and proceed directly to the post-test.'
+                            : 'Based on your pre-test score, please complete all the modules below to unlock the post-test.'
+                        }
+                    </AlertDescription>
+                </Alert>
+            )}
             
             {availableTests && availableTests.length > 0 && (
                 <div className="mb-12">

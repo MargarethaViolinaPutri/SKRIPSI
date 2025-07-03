@@ -16,6 +16,10 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles, GiveExperience, HasAchievements;
 
+    /** Clasification user group */
+    const GROUP_EXP = 'experiment';
+    const GROUP_CON = 'control';
+
     /**
      * The attributes that are mass assignable.
      *
