@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use LevelUp\Experience\Concerns\GiveExperience;
@@ -53,5 +54,12 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(ClassRoom::class, 'class_room_users')
             ->withTimestamps();
+    }
+
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class, 'course_user')
+                    ->withPivot('class_group')
+                    ->withTimestamps();
     }
 }
