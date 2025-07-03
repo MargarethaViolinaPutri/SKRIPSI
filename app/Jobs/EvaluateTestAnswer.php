@@ -3,13 +3,16 @@ namespace App\Jobs;
 
 use App\Models\TestAttempt;
 use App\Service\PythonEvaluationService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 
-// Perhatikan: 'implements ShouldQueue' sudah dihapus
-class EvaluateTestAnswer
+class EvaluateTestAnswer implements ShouldQueue
 {
-    use Dispatchable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected TestAttempt $attempt;
     protected string $studentCode;
