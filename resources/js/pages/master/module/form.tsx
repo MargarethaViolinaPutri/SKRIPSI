@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { fetchCourse } from '@/lib/select';
 import { Module } from '@/types/module';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { Loader } from 'lucide-react';
 import React, { ReactNode, useEffect } from 'react';
@@ -181,7 +181,10 @@ export default function ModuleForm({ module, isDetail, iframeSrc }: ModuleFormPr
                         </details>
                     ) : null}
                 </div>
-                <div className="col-span-12">
+                <div className="col-span-12 flex flex-row gap-2">
+                    <Button variant="outline" disabled={processing} asChild>
+                        <Link href={route('master.module.index')}>Back</Link>
+                    </Button>
                     <Button variant="success" type="submit" disabled={processing}>
                         {processing && <Loader className="mr-2 animate-spin" />}
                         Submit

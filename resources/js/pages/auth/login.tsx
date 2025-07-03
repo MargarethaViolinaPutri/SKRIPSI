@@ -28,7 +28,7 @@ export default function Login() {
         <div className="grid min-h-svh lg:grid-cols-2">
             <div className="bg-muted relative hidden lg:block">
                 <img
-                    src="https://www.journey.sekolahauliya.sch.id/wp-content/uploads/2023/12/Pembelajaran-Coding-di-SD-Pentingnya-Mengembangkan-Keterampilan-Digital-Sejak-Dini-.jpeg"
+                    src="/images/login.png"
                     alt="Coding Ilustration"
                     className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
                 />

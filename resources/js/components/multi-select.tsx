@@ -27,6 +27,7 @@ export const MultiSelect = forwardRef<any, MultiSelectProps<any>>(({ className, 
             loadOptions={props.loadOptions}
             defaultOptions
             isClearable
+            value={props.value}
             defaultValue={props.defaultValue}
             onChange={(value) => {
                 props.onChange(value);

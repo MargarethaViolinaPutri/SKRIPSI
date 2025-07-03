@@ -19,10 +19,10 @@ export function NavMain({ items = [], hover = '', color = '' }: { items: NavItem
                                     if (!item.href) return false;
                                     try {
                                         const itemUrl = new URL(item.href);
-                                        return page.url === itemUrl.pathname;
+                                        return page.url.startsWith(itemUrl.pathname);
                                     } catch {
                                         // If item.href is relative URL
-                                        return page.url === item.href;
+                                        return page.url.startsWith(item.href);
                                     }
                                 })();
                                 console.log(`Checking active state for ${item.title}:`, isActive);

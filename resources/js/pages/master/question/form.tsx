@@ -20,13 +20,12 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     const isDetail = question && question.id != null;
     const [blankCode, setBlankCode] = useState<string>(question && question.id ? question.test || '' : '');
 
-    console.log('Question prop:', question);
-    console.log('Module in question:', question?.module);
-
     const initialData = {
         ...question,
-        module_id: question?.module_id || question?.module?.id || null,
-        module: question?.module || null,
+        name: question?.name || '',
+        desc: question?.desc || '',
+        module_id: question?.module_id || question?.module?.id || 0,
+        module: question?.module ? { id: question.module.id, name: question.module.name || '' } : { id: 0, name: '' },
     };
 
     const { data, setData, errors, processing } = useForm<Question>(initialData);
@@ -36,9 +35,21 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     const [runningCode, setRunningCode] = useState<boolean>(false);
     const [showCodeTest, setShowCodeTest] = useState<boolean>(isDetail);
 
+    const [moduleOptions, setModuleOptions] = useState<{ value: string; label: string }[]>([]);
+
     useEffect(() => {
         setShowCodeTest(isDetail);
     }, [isDetail]);
+
+    useEffect(() => {
+        async function loadModuleOptions() {
+            const options = await fetchModule('');
+
+            const stringValueOptions = options.map((opt) => ({ value: String(opt.value), label: opt.label }));
+            setModuleOptions(stringValueOptions);
+        }
+        loadModuleOptions();
+    }, []);
 
     // Removed moduleLabel state and fetchModule effect as module data is directly used from question prop
 
@@ -56,7 +67,6 @@ export default function QuestionForm({ question }: QuestionFormProps) {
                 });
                 setPyodide(py);
             } catch (error) {
-                console.error('Failed to load Pyodide:', error);
                 setRunOutput('Error loading Pyodide. Please try again later.');
             } finally {
                 setPyodideLoading(false);
@@ -82,7 +92,6 @@ export default function QuestionForm({ question }: QuestionFormProps) {
                 alert('Invalid response from Prism API.');
             }
         } catch (error) {
-            console.error('Failed to generate questions with Prism:', error);
             alert('Failed to generate questions with Prism.');
         }
     };
@@ -92,7 +101,7 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     };
 
     const handleAutoSubmit = async () => {
-        if (!data.module_id || !data.name || !data.desc) {
+        if (!data.module_id) {
             alert('Pastikan semua field wajib telah diisi.');
             return;
         }
@@ -106,14 +115,13 @@ export default function QuestionForm({ question }: QuestionFormProps) {
             try {
                 await axios.post(route('master.question.store.fib'), {
                     module_id: data.module_id,
-                    name: data.name,
-                    desc: data.desc,
+                    name: data.name && data.name.trim() !== '' ? data.name : `Question ${generatedQuestions[0].question_number}`,
+                    desc: data.desc && data.desc.trim() !== '' ? data.desc : generatedQuestions[0].narasi || 'Auto Generated Description',
                     code: '-',
                     questions: updatedQuestions,
                 });
                 router.visit(route('master.question.index'));
             } catch (err: any) {
-                console.error('Gagal menyimpan FIB:', err.response?.data || err);
                 alert('Gagal menyimpan soal: ' + (err.response?.data?.message || 'Unknown error'));
             }
         } else {
@@ -124,36 +132,44 @@ export default function QuestionForm({ question }: QuestionFormProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!data.module_id || !data.name || !data.desc) {
+        if (!data.module_id) {
             alert('Pastikan semua field wajib telah diisi.');
             return;
         }
-
         try {
+            let payload = { ...data };
+            if ((!payload.name || payload.name.trim() === '') && generatedQuestions.length > 0) {
+                payload.name = `Question ${generatedQuestions[0].question_number}`;
+            }
+            if ((!payload.desc || payload.desc.trim() === '') && generatedQuestions.length > 0) {
+                payload.desc = generatedQuestions[0].narasi || 'Auto Generated Description';
+            }
+            // Remove name and desc from each question, only keep other fields
+            const updatedQuestions = generatedQuestions.map((q: any) => {
+                const { name, desc, ...rest } = q;
+                return rest;
+            });
+            payload.questions = updatedQuestions;
             if (isDetail && question?.id) {
                 await axios.post(route('master.question.update', question.id), {
-                    ...data,
+                    ...payload,
                     _method: 'PUT',
                 });
             } else {
-                await axios.post(route('master.question.store'), data);
+                await axios.post(route('master.question.store'), payload);
             }
             router.visit(route('master.question.index'));
         } catch (err: any) {
-            console.error('Gagal menyimpan soal:', err.response?.data || err);
             alert('Gagal menyimpan soal: ' + (err.response?.data?.message || 'Unknown error'));
         }
     };
 
     const handleRunCode = async () => {
-        console.log('handleRunCode called');
         if (!pyodide) {
-            console.error('Pyodide is not loaded');
             setRunOutput('Error: Pyodide is not loaded');
             return;
         }
         if (!data.code) {
-            console.warn('No code to run');
             setRunOutput('Please enter code to run.');
             return;
         }
@@ -161,7 +177,7 @@ export default function QuestionForm({ question }: QuestionFormProps) {
         setRunOutput(null);
         try {
             const escapedCode = data.code.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$').replace(/"""/g, '\\"\\"\\"');
-            console.log('Escaped code:', escapedCode);
+
             const pythonCode = `
 import sys
 from io import StringIO
@@ -179,15 +195,12 @@ output.close()
 result
 `;
             const result = await pyodide.runPythonAsync(pythonCode);
-            console.log('Python execution result:', result);
             if (result) {
                 setRunOutput(result);
             } else {
-                console.warn('No output from Python execution');
                 setRunOutput('No output from Python execution.');
             }
         } catch (error: any) {
-            console.error('Error running Python code:', error);
             setRunOutput(`Error: ${error.message}`);
         } finally {
             setRunningCode(false);
@@ -202,29 +215,36 @@ result
                     <MultiSelect
                         placeholder="Module"
                         name="module_id"
-                        defaultValue={{ value: data.module_id, label: data.module?.name || '' }}
-                        onChange={(v) => setData('module_id', v.value)}
+                        value={moduleOptions.find((opt) => opt.value === String(data.module_id)) || null}
+                        onChange={(v) => {
+                            setData('module_id', Number(v.value));
+                            setData('module', { id: Number(v.value), name: v.label || '' });
+                        }}
                         loadOptions={fetchModule}
                     />
                     <InputError message={errors?.module_id} />
                 </div>
                 {/* Name Field */}
-                <div className="col-span-12 flex flex-col gap-1.5">
-                    <Label>Name</Label>
-                    <Input placeholder="Name" value={data.name} onChange={(v) => setData('name', v.currentTarget.value)} />
-                    <InputError message={errors?.name} />
-                </div>
-                {/* Description Field */}
-                <div className="col-span-12 flex flex-col gap-1.5">
-                    <Label>Description</Label>
-                    <Textarea placeholder="Description" value={data.desc} onChange={(v) => setData('desc', v.currentTarget.value)} />
-                    <InputError message={errors?.desc} />
-                </div>
+                {isDetail && (
+                    <>
+                        <div className="col-span-12 flex flex-col gap-1.5">
+                            <Label>Name</Label>
+                            <Input placeholder="Name" value={data.name} onChange={(v) => setData('name', v.currentTarget.value)} />
+                            <InputError message={errors?.name} />
+                        </div>
+                        {/* Description Field */}
+                        <div className="col-span-12 flex flex-col gap-1.5">
+                            <Label>Description</Label>
+                            <Textarea placeholder="Description" value={data.desc} onChange={(v) => setData('desc', v.currentTarget.value)} />
+                            <InputError message={errors?.desc} />
+                        </div>
+                    </>
+                )}
                 {/* Code Editors */}
                 <div className="col-span-12">
                     {!isDetail && (
                         <div>
-                            <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
+                            <Label className="mb-1 text-sm font-semibold">Main Code</Label>
                             <Editor
                                 className="w-full border"
                                 value={data.code}
@@ -271,6 +291,9 @@ result
                 <div className="col-span-12 flex flex-col gap-1.5">
                     <InputError message={errors?.code} />
                     <div className="flex gap-2">
+                        <Button variant="outline" disabled={processing} asChild>
+                            <Link href={route('master.user.index')}>Back</Link>
+                        </Button>
                         <Button
                             variant="outline"
                             type="button"
@@ -296,16 +319,13 @@ result
                                 {processing ? 'Menyimpan...' : 'Update'}
                             </Button>
                         )}
-                        <Button variant="outline" disabled={processing} asChild>
-                            <Link href={route('master.user.index')}>Back</Link>
-                        </Button>
                     </div>
                 </div>
 
                 {runOutput !== null && runOutput !== '' && (
-                    <div className="col-span-12">
-                        <Label>Output:</Label>
-                        <pre className="rounded bg-black p-3 whitespace-pre-wrap text-white">{runOutput}</pre>
+                    <div className="col-span-12 flex flex-col gap-2">
+                        <Label>Run Output:</Label>
+                        <pre className="rounded bg-gray-200 p-3 whitespace-pre-wrap text-black">{runOutput}</pre>
                     </div>
                 )}
             </form>
@@ -313,58 +333,62 @@ result
             {/* Questions Navigation and Display */}
             {!isDetail && generatedQuestions.length > 0 && (
                 <>
-                    <div className="col-span-12 flex flex-wrap gap-2 border-t pt-4">
-                        {generatedQuestions.map((q) => (
-                            <Button
-                                key={q.question_number}
-                                variant={activeQuestion === q.question_number ? 'default' : 'outline'}
-                                onClick={() => setActiveQuestion(q.question_number)}
-                            >
-                                {q.question_number}
-                            </Button>
-                        ))}
-                    </div>
+                    {generatedQuestions.length > 1 && (
+                        <div className="col-span-12 flex flex-wrap gap-2 border-t pt-4">
+                            {generatedQuestions.map((q) => (
+                                <Button
+                                    key={q.question_number}
+                                    variant={activeQuestion === q.question_number ? 'default' : 'outline'}
+                                    onClick={() => setActiveQuestion(q.question_number)}
+                                >
+                                    {q.question_number}
+                                </Button>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="col-span-12 mt-4">
-                        {generatedQuestions
-                            .filter((q) => q.question_number === activeQuestion)
-                            .map((q) => (
-                                <div key={q.question_number} className="rounded-lg border bg-white p-4 shadow-md">
-                                    <div className="mb-2">
-                                        <span className="inline-block rounded-full bg-indigo-500 px-3 py-1 text-sm font-medium text-white">
-                                            Question {q.question_number}
-                                        </span>
+                        {(generatedQuestions.length === 1
+                            ? generatedQuestions
+                            : generatedQuestions.filter((q) => q.question_number === activeQuestion)
+                        ).map((q) => (
+                            <div key={q.question_number} className="rounded-lg border bg-white p-4 shadow-md">
+                                <div className="mb-2">
+                                    <span className="inline-block rounded-full bg-indigo-500 px-3 py-1 text-sm font-medium text-white">
+                                        Question {q.question_number}
+                                    </span>
+                                </div>{' '}
+                                <Textarea
+                                    className="mb-4 text-gray-700 italic"
+                                    value={q.narasi}
+                                    onChange={(e) => handleEditField(q.question_number, 'narasi', e.currentTarget.value)}
+                                    rows={3}
+                                />
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div>
+                                        <Label className="mb-1 text-sm font-semibold">Blank Code (for student)</Label>
+                                        <p className="mb-2 text-sm text-gray-500">when you want to edit a blank use '____' to make it blank</p>
+                                        <Editor
+                                            className="border"
+                                            value={q.kode_blank}
+                                            onChange={(e) => handleEditField(q.question_number, 'kode_blank', e || '')}
+                                            defaultLanguage="python"
+                                            height="200px"
+                                        />
                                     </div>
-                                    <Textarea
-                                        className="mb-4 text-gray-700 italic"
-                                        value={q.narasi}
-                                        onChange={(e) => handleEditField(q.question_number, 'narasi', e.currentTarget.value)}
-                                        rows={3}
-                                    />
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
-                                            <Label className="mb-1 text-sm font-semibold">Kode Blank (Editable)</Label>
-                                            <Editor
-                                                className="border"
-                                                value={q.kode_blank}
-                                                onChange={(e) => handleEditField(q.question_number, 'kode_blank', e || '')}
-                                                defaultLanguage="python"
-                                                height="200px"
-                                            />
-                                        </div>
-                                        <div>
-                                            <Label className="mb-1 text-sm font-semibold">Kode Utuh (Editable)</Label>
-                                            <Editor
-                                                className="border"
-                                                value={q.kode_utuh}
-                                                onChange={(e) => handleEditField(q.question_number, 'kode_utuh', e || '')}
-                                                defaultLanguage="python"
-                                                height="200px"
-                                            />
-                                        </div>
+                                    <div>
+                                        <Label className="mb-1 text-sm font-semibold">Full Code (answer key)</Label>
+                                        <Editor
+                                            className="border"
+                                            value={q.kode_utuh}
+                                            onChange={(e) => handleEditField(q.question_number, 'kode_utuh', e || '')}
+                                            defaultLanguage="python"
+                                            height="200px"
+                                        />
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+                        ))}
                     </div>
                 </>
             )}

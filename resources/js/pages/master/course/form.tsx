@@ -43,7 +43,7 @@ export default function CourseForm({ course }: CourseFormProps) {
                 <Button variant="outline" disabled={processing} asChild>
                     <Link href={route('master.course.index')}>Back</Link>
                 </Button>
-                <Button disabled={processing}>
+                <Button variant="success" disabled={processing}>
                     {processing && <Loader className="mr-2 animate-spin" />}
                     Submit
                 </Button>

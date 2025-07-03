@@ -73,13 +73,13 @@ export default function UserForm({ user }: UserFormProps) {
                 />
                 <InputError message={errors?.password_confirmation} />
             </div>
-            <div className="col-span-12">
+            <div className="col-span-12 flex flex-row gap-2">
+                <Button variant="outline" disabled={processing} asChild>
+                    <Link href={route('master.user.index')}>Back</Link>
+                </Button>
                 <Button disabled={processing} variant="success">
                     {processing && <Loader className="mr-2 animate-spin" />}
                     Submit
-                </Button>
-                <Button variant="outline" disabled={processing} asChild>
-                    <Link href={route('master.user.index')}>Back</Link>
                 </Button>
             </div>
         </form>

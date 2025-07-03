@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { FormResponse } from '@/lib/constant';
 import { fetchUser } from '@/lib/select';
 import { ClassRoom } from '@/types/classroom';
-import { useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { Loader } from 'lucide-react';
 import { ReactNode } from 'react';
@@ -105,8 +105,11 @@ export default function ClassRoomForm({ classroom }: ClassRoomFormProps) {
                 />
                 {/* <InputError message={errors?.members} /> */}
             </div>
-            <div className="col-span-12">
-                <Button disabled={processing}>
+            <div className="col-span-12 flex flex-row gap-2">
+                <Button variant="outline" disabled={processing} asChild>
+                    <Link href={route('master.classroom.index')}>Back</Link>
+                </Button>
+                <Button variant="success" disabled={processing}>
                     {processing && <Loader className="mr-2 animate-spin" />}
                     Submit
                 </Button>

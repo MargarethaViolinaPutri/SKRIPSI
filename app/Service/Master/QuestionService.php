@@ -25,14 +25,14 @@ class QuestionService extends BaseService implements QuestionContract
         // Find the max question number for existing questions with the same base name and module
         $lastQuestion = $this->model
             ->where('module_id', $base['module_id'])
-            ->where('name', 'like', $baseName . ' - Question %')
+            ->where('name', 'like', 'Question %')
             ->orderByDesc('id')
             ->first();
 
         $lastNumber = 0;
         if ($lastQuestion) {
-            // Extract number from name, e.g. "a - Question 3"
-            if (preg_match('/- Question (\d+)$/', $lastQuestion->name, $matches)) {
+            // Extract number from name, e.g. "Question 3"
+            if (preg_match('/Question (\d+)$/', $lastQuestion->name, $matches)) {
                 $lastNumber = (int)$matches[1];
             }
         }
@@ -42,7 +42,7 @@ class QuestionService extends BaseService implements QuestionContract
         foreach ($questions as $q) {
             $this->create([
                 'module_id' => $base['module_id'],
-                'name' => $baseName . ' - Question ' . $currentNumber,
+                'name' => 'Question ' . $currentNumber,
                 'desc' => $q['narasi'],
                 'test' => $q['kode_utuh'],
                 'code' => $q['kode_blank'],
@@ -86,5 +86,87 @@ class QuestionService extends BaseService implements QuestionContract
             'desc' => $baseQuestion->desc,
             'questions' => $groupedQuestions,
         ];
+    }
+
+    public function all(
+        $filters,
+        $sorts,
+        ?bool $paginate = null,
+        array $relation = [],
+        array $withCount = [],
+        int $perPage  = 10,
+        string $orderColumn  = 'id',
+        string $orderPosition = 'asc',
+        array $conditions = [],
+    ) {
+        $model = $this->model->query();
+
+        // Apply filters
+        foreach ($filters as $filter) {
+            if (request()->has($filter)) {
+                $model->where($filter, 'like', '%' . request()->get($filter) . '%');
+            }
+        }
+
+        // Apply relations
+        if (!empty($relation)) {
+            $model->with($relation);
+        }
+
+        // Apply sorts
+        foreach ($sorts as $sort) {
+            $model->orderBy($sort);
+        }
+
+        if (!$paginate) {
+            $items = $model->get()->map(function ($item, $index) {
+                $item->iteration = $index + 1;
+                return $item;
+            });
+            return $items;
+        }
+
+        $result = $model->paginate($perPage)
+            ->appends(request()->query());
+
+        $items = collect($result->items())->map(function ($item, $index) use ($result) {
+            $item->iteration = $result->firstItem() + $index;
+            return $item;
+        });
+
+        return [
+            'items' => $items,
+            'prev_page' => $result->currentPage() > 1 ? $result->currentPage() - 1 : null,
+            'current_page' => $result->currentPage(),
+            'next_page' => $result->hasMorePages() ? $result->currentPage() + 1 : null,
+            'total_page' => $result->lastPage(),
+            'per_page' => $result->perPage(),
+        ];
+    }
+
+    /**
+     * Update existing questions' names to "Question X" format based on their order.
+     *
+     * @param int|null $moduleId Optional module ID to filter questions.
+     * @return bool
+     */
+    public function updateExistingQuestionNames(?int $moduleId = null): bool
+    {
+        $query = $this->model->query();
+
+        if ($moduleId !== null) {
+            $query->where('module_id', $moduleId);
+        }
+
+        $questions = $query->orderBy('id')->get();
+
+        $currentNumber = 1;
+        foreach ($questions as $question) {
+            $question->name = 'Question ' . $currentNumber;
+            $question->save();
+            $currentNumber++;
+        }
+
+        return true;
     }
 }

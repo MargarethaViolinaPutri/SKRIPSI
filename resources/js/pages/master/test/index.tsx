@@ -4,15 +4,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import { Base } from '@/types/base';
+import { Course } from '@/types/course';
 import { Test } from '@/types/test';
-import { Link, useForm, router } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { Eye, Plus, Trash, Edit } from 'lucide-react';
-import { FormEvent, ReactNode, useCallback, useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import { Edit, Eye, Plus, Trash } from 'lucide-react';
+import { FormEvent, ReactNode, useState } from 'react';
 import TestForm from './form';
-import { Course } from '@/types/course';
 
 interface Props {
     courses: Course[];
@@ -47,7 +47,7 @@ export default function TestIndex({ courses }: Props) {
         e.preventDefault();
         if (idToDelete) {
             destroy(route('master.test.destroy', { id: idToDelete }), {
-                onSuccess: () => setIdToDelete(null)
+                onSuccess: () => setIdToDelete(null),
             });
         }
     };
@@ -62,7 +62,7 @@ export default function TestIndex({ courses }: Props) {
         helper.accessor('course.name', {
             id: 'course',
             header: 'Course',
-            cell: info => info.getValue(),
+            cell: (info) => info.getValue(),
         }),
         helper.accessor('title', {
             id: 'title',
@@ -80,11 +80,13 @@ export default function TestIndex({ courses }: Props) {
             cell: ({ row }) => {
                 const isPublished = row.original.status === 'published';
                 return (
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize ${
-                        isPublished 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
+                    <span
+                        className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${
+                            isPublished
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}
+                    >
                         {row.original.status}
                     </span>
                 );
@@ -128,7 +130,7 @@ export default function TestIndex({ courses }: Props) {
                             <Edit className="mr-2 h-4 w-4" />
                             <span>Edit Details</span>
                         </DropdownMenuItem>
-                        
+
                         <DropdownMenuItem onSelect={() => setIdToDelete(row.original.id)}>
                             <Trash className="mr-2 h-4 w-4" />
                             <span>Delete</span>
@@ -160,15 +162,19 @@ export default function TestIndex({ courses }: Props) {
                 </DialogContent>
             </Dialog>
 
-            <div className="flex justify-between items-center mb-4">
+            <div className="mb-4 flex items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-medium">{isDetail ? (selectedTest ? `Edit Test: ${selectedTest.title}` : 'Create New Test') : 'Manage Tests'}</h1>
+                    <h1 className="text-lg font-medium">
+                        {isDetail ? (selectedTest ? `Edit Test: ${selectedTest.title}` : 'Create New Test') : 'Manage Tests'}
+                    </h1>
                     <p className="text-sm text-gray-500">{isDetail ? 'Fill in the details below.' : 'View and manage all tests.'}</p>
                 </div>
                 {isDetail ? (
-                    <Button variant="outline" onClick={() => setIsDetail(false)}>Back to List</Button>
+                    <Button variant="outline" onClick={() => setIsDetail(false)}>
+                        Back to List
+                    </Button>
                 ) : (
-                    <Button onClick={handleCreate}>
+                    <Button variant="blue" onClick={handleCreate}>
                         <Plus className="mr-2 h-4 w-4" /> Add Test
                     </Button>
                 )}
@@ -176,7 +182,7 @@ export default function TestIndex({ courses }: Props) {
 
             <div className="my-4">
                 {isDetail ? (
-                    <TestForm test={selectedTest || undefined} courses={courses}/>
+                    <TestForm test={selectedTest || undefined} courses={courses} />
                 ) : (
                     <NextTable<Test> load={load} columns={columns} id="id" />
                 )}

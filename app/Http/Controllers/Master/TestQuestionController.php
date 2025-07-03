@@ -8,11 +8,14 @@ use App\Models\Test;
 use App\Models\TestQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TestQuestionController extends Controller
 {
     public function store(Request $request, Test $test)
     {
+        Log::info('TestQuestionController@store called with data:', $request->all());
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'desc' => 'nullable|string',
@@ -20,7 +23,7 @@ class TestQuestionController extends Controller
             'test' => 'required|string',
         ]);
 
-        $test->question()->updateOrCreate(
+        $question = $test->question()->updateOrCreate(
             ['test_id' => $test->id],
             [
                 'name' => $validated['name'],
@@ -30,7 +33,14 @@ class TestQuestionController extends Controller
             ]
         );
 
-        return redirect()->route('master.test.show', $test->id)->with('success', 'Question saved successfully.');
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Question saved successfully.',
+                'question' => $question,
+            ]);
+        }
+
+        return redirect()->route('master.test.index')->with('success', 'Question saved successfully.');
     }
 
     public function destroy(Test $test, TestQuestion $question)

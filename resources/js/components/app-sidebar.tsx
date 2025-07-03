@@ -108,7 +108,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navigation} hover="hover:bg-blue-100" color="text-blue-700" />
+                <NavMain items={navigation} hover="hover:bg-blue-100" color="text-black" />
             </SidebarContent>
 
             <SidebarFooter>
