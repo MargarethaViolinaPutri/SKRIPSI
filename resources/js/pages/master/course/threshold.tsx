@@ -19,6 +19,7 @@ const Threshold: React.FC = () => {
         studentTestDetails: { id: number; name: string; total_score: number; class_group: string }[];
     };
 
+    console.log(studentTestDetails);
     const [threshold, setThreshold] = useState<number | ''>(course.threshold ?? '');
 
     const columns = [
@@ -31,11 +32,19 @@ const Threshold: React.FC = () => {
             id: 'total_score',
             header: 'Total Score',
             accessorKey: 'total_score',
+            cell: ({ getValue }: any) => {
+                const score = getValue();
+                return score ? Number(score).toFixed(2) : 'N/A';
+            }
         },
         {
             id: 'class_group',
             header: 'Class Group',
             accessorKey: 'class_group',
+            cell: ({ getValue }: any) => {
+                const group = getValue();
+                return group ? group : <span className="text-gray-400">-</span>;
+            }
         },
     ];
 
@@ -70,21 +79,13 @@ const Threshold: React.FC = () => {
     // Dummy load function to satisfy NextTable props
     const load = async (params: Record<string, unknown>) => {
         return Promise.resolve({
-            data: studentTestDetails,
-            meta: {
-                current_page: 1,
-                from: 0,
-                last_page: 1,
-                per_page: 10,
-                to: studentTestDetails.length,
-                total: studentTestDetails.length,
-            },
-            links: {
-                first: '',
-                last: '',
-                prev: null,
-                next: null,
-            },
+            items: studentTestDetails,
+
+            current_page: 1,
+            total_page: 1,
+            per_page: studentTestDetails.length,
+            prev_page: null,
+            next_page: null,
         });
     };
 
@@ -98,7 +99,7 @@ const Threshold: React.FC = () => {
 
                 <div className="mb-4 space-y-1 text-gray-700 dark:text-gray-200">
                     <p>
-                        <strong>Average Score:</strong> {averageData.average_score.toFixed(2)}
+                        <strong>Average Score:</strong> {Number(averageData.average_score || 0).toFixed(2)}
                     </p>
 
                     <p className="mt-2 font-semibold">Test Progress:</p>
@@ -108,13 +109,18 @@ const Threshold: React.FC = () => {
                                 {testProgress.students_tested} / {testProgress.total_students} students tested
                             </span>
                             <span className="text-xs font-bold">
-                                {Math.round((testProgress.students_tested / testProgress.total_students) * 100)}%
+                                {testProgress.total_students > 0
+                                    ? Math.round((testProgress.students_tested / testProgress.total_students) * 100)
+                                    : 0}
+                                %
                             </span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
                             <div
                                 className="h-2 rounded-full bg-blue-600 transition-all duration-300"
-                                style={{ width: `${(testProgress.students_tested / testProgress.total_students) * 100}%` }}
+                                style={{
+                                    width: `${testProgress.total_students > 0 ? (testProgress.students_tested / testProgress.total_students) * 100 : 0}%`
+                                }}
                             ></div>
                         </div>
                     </div>
@@ -145,7 +151,7 @@ const Threshold: React.FC = () => {
 
                 <div className="mt-8">
                     <h3 className="mb-4 text-lg font-semibold">Student Test Details</h3>
-                    <NextTable columns={columns} enableSelect={false} mode="table" id="student-test-details" load={load} />
+                    <NextTable columns={columns} enableSelect={false} mode="table" id="id" load={load} />
                 </div>
             </>
         </>

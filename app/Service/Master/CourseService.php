@@ -4,8 +4,12 @@ namespace App\Service\Master;
 
 use App\Contract\Master\CourseContract;
 use App\Models\Course;
+use App\Models\Test;
+use App\Models\TestAttempt;
+use App\Models\User;
 use App\Service\BaseService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CourseService extends BaseService implements CourseContract
@@ -45,14 +49,18 @@ class CourseService extends BaseService implements CourseContract
         return true;
     }
 
-    public function getAverageScoreAndStudentCount(): array
+    public function getAverageScoreAndStudentCount(int $courseId): array
     {
+        $pretest = Test::where('course_id', $courseId)->where('type', Test::PRE_TEST)->first();
+
+        if (!$pretest) {
+            return ['average_score' => 0, 'student_count' => 0];
+        }
+
         $result = DB::table('test_attempts')
-            ->join('users', 'test_attempts.user_id', '=', 'users.id')
-            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'student')
-            ->selectRaw('AVG(test_attempts.total_score) as average_score, COUNT(DISTINCT users.id) as student_count')
+            ->where('test_id', $pretest->id)
+            ->whereNotNull('finished_at')
+            ->selectRaw('AVG(total_score) as average_score, COUNT(DISTINCT user_id) as student_count')
             ->first();
 
         return [
@@ -61,21 +69,23 @@ class CourseService extends BaseService implements CourseContract
         ];
     }
 
-    public function getTestProgress(): array
+    public function getTestProgress(int $courseId): array
     {
-        $totalStudents = DB::table('users')
-            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'student')
-            ->count();
+        $totalStudents = User::whereHas('roles', function ($query) {
+            $query->where('name', 'student');
+        })->count();
+
+        $pretest = Test::where('course_id', $courseId)->where('type', Test::PRE_TEST)->first();
+
+        if (!$pretest) {
+            return ['total_students' => $totalStudents, 'students_tested' => 0];
+        }
 
         $studentsTested = DB::table('test_attempts')
-            ->join('users', 'test_attempts.user_id', '=', 'users.id')
-            ->join('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'student')
-            ->distinct('test_attempts.user_id')
-            ->count('test_attempts.user_id');
+            ->where('test_id', $pretest->id)
+            ->whereNotNull('finished_at')
+            ->distinct('user_id')
+            ->count('user_id');
 
         return [
             'total_students' => $totalStudents,
@@ -83,15 +93,62 @@ class CourseService extends BaseService implements CourseContract
         ];
     }
 
-    public function getStudentTestDetails(int $courseId): array
+    public function getStudentTestDetails(int $courseId): Collection
     {
-        $results = DB::table('test_attempts')
-            ->join('users', 'test_attempts.user_id', '=', 'users.id')
-            ->join('course_user', 'users.id', '=', 'course_user.user_id')
-            ->select('users.id', 'users.name', 'test_attempts.total_score', 'course_user.class_group')
-            ->where('course_user.course_id', $courseId)
-            ->get();
+        $pretest = Test::where('course_id', $courseId)->where('type', Test::PRE_TEST)->first();
 
-        return $results->toArray();
+        if (!$pretest) {
+            return collect();
+        }
+
+        return DB::table('test_attempts')
+            ->where('test_attempts.test_id', $pretest->id)
+            ->whereNotNull('test_attempts.finished_at')
+            ->join('users', 'test_attempts.user_id', '=', 'users.id')
+            ->leftJoin('course_user', function ($join) use ($courseId) {
+                $join->on('users.id', '=', 'course_user.user_id')
+                     ->where('course_user.course_id', '=', $courseId);
+            })
+            ->select(
+                'users.id',
+                'users.name',
+                'test_attempts.total_score',
+                'course_user.class_group'
+            )
+            
+            ->orderByDesc('test_attempts.total_score')
+            ->get();
+    }
+
+    public function classifyStudentsByThreshold(Course $course): void
+    {
+        if (is_null($course->threshold)) {
+            return;
+        }
+
+        $pretest = Test::where('course_id', $course->id)->where('type', Test::PRE_TEST)->first();
+        if (!$pretest) {
+            return;
+        }
+
+        $attempts = TestAttempt::where('test_id', $pretest->id)
+                               ->whereNotNull('finished_at')
+                               ->get();
+
+        foreach ($attempts as $attempt) {
+            $classGroup = $attempt->total_score >= $course->threshold ? User::GROUP_CON : User::GROUP_EXP;
+
+            DB::table('course_user')->updateOrInsert(
+                [
+                    'course_id' => $course->id,
+                    'user_id' => $attempt->user_id
+                ],
+                [
+                    'class_group' => $classGroup,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+        }
     }
 }
