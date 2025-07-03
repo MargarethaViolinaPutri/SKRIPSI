@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
 import type { Base } from '@/types/base';
-import type { Course } from '@/types/course';
+import type { Test } from '@/types/test';
 import { Link, useForm } from '@inertiajs/react';
 import { type ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
@@ -12,27 +12,51 @@ import { format, parseISO } from 'date-fns';
 import { Eye, Plus, Trash } from 'lucide-react';
 import { type FormEvent, type ReactNode, useCallback, useMemo, useState } from 'react';
 
-export default function CourseIndex() {
-    const helper = createColumnHelper<Course>();
-    const { processing, delete: destroy } = useForm();
+export default function ManageTest() {
+    const helper = createColumnHelper<Test>();
+    const {
+        data,
+        setData,
+        processing,
+        put,
+        delete: destroy,
+    } = useForm({
+        threshold: '',
+    });
     const [id, setId] = useState<any>(null);
 
     const load = async (params: Record<string, unknown>) => {
-        const response = await axios.get<Base<Course[]>>(route('master.course.fetch', params));
+        const response = await axios.get<Base<Test[]>>(route('master.test.fetch', params));
         return response.data;
     };
 
     const onDelete = (e: FormEvent, id: any) => {
         e.preventDefault();
-        destroy(route('master.course.destroy', { id: id }));
+        destroy(route('master.test.destroy', { id: id }));
+    };
+
+    const onUpdateThreshold = (e: FormEvent) => {
+        e.preventDefault();
+        if (!data.threshold) {
+            alert('Threshold is required');
+            return;
+        }
+        put(route('master.course.update.threshold', { id: 1 }), {
+            onSuccess: () => {
+                alert('Threshold updated successfully');
+            },
+            onError: () => {
+                alert('Failed to update threshold');
+            },
+        });
     };
 
     // Extract the delete handler to prevent re-renders
-    const handleDelete = useCallback((courseId: any) => {
-        setId(courseId);
+    const handleDelete = useCallback((testId: any) => {
+        setId(testId);
     }, []);
 
-    const columns: ColumnDef<Course, any>[] = useMemo(
+    const columns: ColumnDef<Test, any>[] = useMemo(
         () => [
             helper.accessor('id', {
                 id: 'id',
@@ -45,6 +69,12 @@ export default function CourseIndex() {
                 header: 'Name',
                 enableColumnFilter: true,
                 cell: ({ row }) => row.original.name,
+            }),
+            helper.accessor('description', {
+                id: 'description',
+                header: 'Description',
+                enableColumnFilter: true,
+                cell: ({ row }) => row.original.description,
             }),
             helper.display({
                 id: 'created_at',
@@ -67,17 +97,9 @@ export default function CourseIndex() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="center">
-                                <Link href={route('master.course.show', { id: row.original.id })}>
+                                <Link href={route('master.test.show', { id: row.original.id })}>
                                     <DropdownMenuItem>
                                         <Eye /> Detail
-                                    </DropdownMenuItem>
-                                </Link>
-                                <Link
-                                    href={route('master.course.threshold', { id: row.original.id })}
-                                    onClick={() => console.log('Navigating to threshold for course id:', row.original.id)}
-                                >
-                                    <DropdownMenuItem>
-                                        <Eye /> Manage Threshold
                                     </DropdownMenuItem>
                                 </Link>
                                 <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
@@ -100,15 +122,15 @@ export default function CourseIndex() {
             <Dialog open={id != null} onOpenChange={(open) => !open && setId(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Course</DialogTitle>
-                        <DialogDescription>Are you sure you want to delete this course? This action cannot be undone.</DialogDescription>
+                        <DialogTitle>Delete Test</DialogTitle>
+                        <DialogDescription>Are you sure you want to delete this test? This action cannot be undone.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <form onSubmit={(e) => onDelete(e, id)}>
                             <Button variant="outline" onClick={() => setId(null)}>
                                 Cancel
                             </Button>
-                            <Button variant="destructive" type="submit">
+                            <Button variant="destructive" type="submit" disabled={processing}>
                                 Delete
                             </Button>
                         </form>
@@ -117,11 +139,11 @@ export default function CourseIndex() {
             </Dialog>
             <div className="flex flex-row items-center justify-between">
                 <div>
-                    <h1 className="text-lg font-medium">Course</h1>
-                    <p className="text-sm">Manage All System Course</p>
+                    <h1 className="text-lg font-medium">Test</h1>
+                    <p className="text-sm">Manage All System Test</p>
                 </div>
                 <div className="flex flex-row gap-2">
-                    <Link href={route('master.course.create')}>
+                    <Link href={route('master.test.create')}>
                         <Button variant="blue">
                             <Plus />
                             Add Data
@@ -129,8 +151,22 @@ export default function CourseIndex() {
                     </Link>
                 </div>
             </div>
+            <form onSubmit={onUpdateThreshold} className="my-4 flex flex-row items-center gap-2">
+                <input
+                    type="number"
+                    min={0}
+                    placeholder="Threshold"
+                    value={data.threshold}
+                    onChange={(e) => setData('threshold', e.target.value)}
+                    className="w-32 rounded border border-gray-300 px-3 py-2"
+                    required
+                />
+                <Button type="submit" disabled={processing}>
+                    Update Threshold
+                </Button>
+            </form>
             <div className="my-4">
-                <NextTable<Course>
+                <NextTable<Test>
                     enableSelect={true}
                     load={load}
                     id={'id'}
@@ -145,4 +181,4 @@ export default function CourseIndex() {
     );
 }
 
-CourseIndex.layout = (page: ReactNode) => <AppLayout children={page} />;
+ManageTest.layout = (page: ReactNode) => <AppLayout children={page} />;
