@@ -132,7 +132,7 @@ export default function SystemIndex() {
                     load={load}
                     id={'id'}
                     columns={columns}
-                    mode="table"
+                    mode="grid"
                     filterComponent={<FilterComponent />}
                     onSelect={(val) => {
                         console.log(val);
