@@ -27,7 +27,7 @@ class PythonEvaluationService
             File::put("{$evalPath}/reference_code.py", $referenceCode);
             File::put("{$evalPath}/evaluate_plain.py", $this->getPlainEvaluatorCode());
 
-            $pythonExecutable = env('PYTHON_EXECUTABLE', 'python');
+            $pythonExecutable = env('PYTHON_EXECUTABLE', '/usr/bin/python3');
 
             $env = ['PYTHONHASHSEED' => 0];
 

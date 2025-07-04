@@ -38,7 +38,6 @@ interface Props {
 export default function TestCard({ test }: Props) {
     const completedAttempt = test.user_latest_completed_attempt;
 
-    console.log(test);
     if (completedAttempt) {
         return (
             <div className="border rounded-lg p-4 flex justify-between items-center transition-all bg-green-50 dark:bg-green-900/20">
