@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Contract\BaseContract;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
@@ -92,8 +93,19 @@ class BaseService implements BaseContract
                 'total_page' => $result->lastPage(),
                 'per_page' => $result->perPage(),
             ];
-        } catch (Exception $e) {
-            return $e;
+        } catch (QueryException $e) {
+            \Log::error('QueryException in Service::all(): '.$e->getMessage()
+                        .' | SQL: '.$e->getSql()
+                        .' | Bindings: '.json_encode($e->getBindings()));
+            return [
+                'items'        => [],
+                'prev_page'    => null,
+                'current_page' => null,
+                'next_page'    => null,
+                'total_page'   => 0,
+                'per_page'     => $perPage,
+                'error'        => 'Database query error'
+            ];
         }
     }
 
