@@ -13,6 +13,7 @@ use App\Utils\WebResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class QuestionController extends Controller
 {
@@ -44,19 +45,15 @@ class QuestionController extends Controller
 
     public function fetch(): JsonResponse
     {
-        $allowedFilters = [
-            'name',
-            'module_id'
-        ];
-
-        $allowedSorts = [
-            'name',
-            'created_at'
-        ];
-        
         $result = $this->service->all(
-            filters: $allowedFilters,
-            sorts: $allowedSorts,
+            filters: [
+                AllowedFilter::partial('name'),
+                AllowedFilter::exact('module_id'),
+            ],
+            sorts: [
+                'name',
+                'created_at',
+            ],
             paginate: true,
             relation: ['userAnswer'],
             withCount: ['userAnswers'],
