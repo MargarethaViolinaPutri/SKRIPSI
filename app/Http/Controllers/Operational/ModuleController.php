@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class ModuleController extends Controller
 {
@@ -25,19 +26,12 @@ class ModuleController extends Controller
 
     public function fetch(): JsonResponse
     {
-        $allowedFilters = [
-            'name',
-            'course_id'
-        ];
-
-        $allowedSorts = [
-            'name',
-            'created_at'
-        ];
-        
         $result = $this->service->all(
-            filters: $allowedFilters,
-            sorts: $allowedSorts,
+            filters: [
+                'name', 
+                AllowedFilter::exact('course_id'),
+            ],
+            sorts: ['name','created_at'],
             paginate: true,
             relation: [
                 'questions' => function ($query) {
