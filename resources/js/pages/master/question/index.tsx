@@ -44,6 +44,7 @@ export default function QuestionIndex() {
             header: 'Module',
             enableColumnFilter: true,
             cell: ({ row }) => row.original.module?.name,
+            sortingFn: 'auto',
         }),
         helper.accessor('name', {
             id: 'name',

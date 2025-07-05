@@ -42,9 +42,12 @@ class QuestionController extends Controller
 
     public function fetch()
     {
+        $sortParam = request()->get('sort', 'module');
+        $sorts = array_filter(explode(',', $sortParam));
+
         $data = $this->service->all(
             filters: ['name'],
-            sorts: ['name'],
+            sorts: $sorts,
             paginate: true,
             relation: ['module'],
             perPage: request()->get('per_page', 10)

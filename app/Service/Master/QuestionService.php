@@ -113,9 +113,45 @@ class QuestionService extends BaseService implements QuestionContract
             $model->with($relation);
         }
 
-        // Apply sorts
+        // Set default sort to module if no sorts provided
+        if (empty($sorts)) {
+            $sorts = ['module'];
+        }
+
+        // Check if sorting by module is requested
+        $sortByModule = false;
         foreach ($sorts as $sort) {
-            $model->orderBy($sort);
+            $column = $sort;
+            if (str_starts_with($sort, '-')) {
+                $column = substr($sort, 1);
+            }
+            if ($column === 'module') {
+                $sortByModule = true;
+                break;
+            }
+        }
+
+        if ($sortByModule) {
+            $model->leftJoin('modules', 'questions.module_id', '=', 'modules.id')
+                ->select('questions.*', 'modules.name as module_name');
+        } else {
+            $model->select('questions.*');
+        }
+
+        foreach ($sorts as $sort) {
+            $direction = 'asc';
+            $column = $sort;
+
+            if (str_starts_with($sort, '-')) {
+                $direction = 'desc';
+                $column = substr($sort, 1);
+            }
+
+            if ($column === 'module') {
+                $model->orderBy('module_name', $direction);
+            } else {
+                $model->orderBy($column, $direction);
+            }
         }
 
         if (!$paginate) {

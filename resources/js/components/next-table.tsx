@@ -41,6 +41,7 @@ type NextTableProps<T> = {
     onParamsChange?: (params: Record<string, unknown>) => void;
     mode?: 'table' | 'grid';
     gridRenderer?: (row: T) => ReactNode;
+    defaultSorting?: SortingState;
 };
 
 function NextTable<T>({
@@ -53,13 +54,14 @@ function NextTable<T>({
     onParamsChange,
     mode = 'table',
     gridRenderer,
+    defaultSorting,
 }: NextTableProps<T>) {
     const [data, setData] = useState<Base<T[]>>({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [sorting, setSorting] = useState<SortingState>([]);
+    const [sorting, setSorting] = useState<SortingState>(defaultSorting ?? []);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [pagination, setPagination] = useState<PaginationState>({
         pageIndex: 0,
