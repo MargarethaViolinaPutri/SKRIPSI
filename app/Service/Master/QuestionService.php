@@ -148,7 +148,8 @@ class QuestionService extends BaseService implements QuestionContract
             }
 
             if ($column === 'module') {
-                $model->orderBy('module_name', $direction);
+                $model->orderBy('module_name', $direction)
+                      ->orderBy('name', 'asc'); // secondary sort by question name for sequence
             } else {
                 $model->orderBy($column, $direction);
             }
@@ -194,10 +195,17 @@ class QuestionService extends BaseService implements QuestionContract
             $query->where('module_id', $moduleId);
         }
 
-        $questions = $query->orderBy('id')->get();
+        // Order by module_id and then by id to ensure sequence within module
+        $questions = $query->orderBy('module_id')->orderBy('id')->get();
 
+        $currentModuleId = null;
         $currentNumber = 1;
+
         foreach ($questions as $question) {
+            if ($currentModuleId !== $question->module_id) {
+                $currentModuleId = $question->module_id;
+                $currentNumber = 1;
+            }
             $question->name = 'Question ' . $currentNumber;
             $question->save();
             $currentNumber++;
