@@ -19,6 +19,9 @@ class User extends Authenticatable
     /** Clasification user group */
     const GROUP_EXP = 'experiment';
     const GROUP_CON = 'control';
+    
+    const STRATUM_HIGH = 'high';
+    const STRATUM_LOW = 'low';
 
     /**
      * The attributes that are mass assignable.
