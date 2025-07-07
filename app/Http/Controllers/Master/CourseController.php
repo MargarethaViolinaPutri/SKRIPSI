@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Master;
 
 use App\Contract\Master\CourseContract;
+use App\Exports\StudentClassificationExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CourseRequest;
+use App\Models\Course;
 use App\Utils\WebResponse;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
@@ -94,6 +98,13 @@ class CourseController extends Controller
         }
 
         return WebResponse::response($updateSuccess, 'master.course.index');
+    }
+
+    public function exportThresholdData(Course $course)
+    {
+        $fileName = 'classification_report_' . Str::slug($course->name) . '_' . now()->format('Y-m-d') . '.xlsx';
+        
+        return Excel::download(new StudentClassificationExport($course->id), $fileName);
     }
 
     public function destroy($id)

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CourseService extends BaseService implements CourseContract
 {
@@ -123,7 +124,8 @@ class CourseService extends BaseService implements CourseContract
                 'users.id',
                 'users.name',
                 'test_attempts.total_score',
-                'course_user.class_group'
+                'course_user.class_group',
+                'course_user.stratum'
             )
             
             ->orderByDesc('test_attempts.total_score')
@@ -142,22 +144,61 @@ class CourseService extends BaseService implements CourseContract
         }
 
         $attempts = TestAttempt::where('test_id', $pretest->id)
-                               ->whereNotNull('finished_at')
-                               ->get();
+            ->whereNotNull('finished_at')
+            ->get(['user_id', 'total_score'])
+            ->keyBy('user_id');
 
-        foreach ($attempts as $attempt) {
-            $classGroup = $attempt->total_score >= $course->threshold ? User::GROUP_CON : User::GROUP_EXP;
+        $enrolledStudents = DB::table('course_user')
+            ->where('course_id', $course->id)
+            ->get()
+            ->keyBy('user_id');
 
-            DB::table('course_user')->updateOrInsert(
-                [
-                    'course_id' => $course->id,
-                    'user_id' => $attempt->user_id
-                ],
-                [
-                    'class_group' => $classGroup,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
+        $dataToUpsert = [];
+
+        $groupCounts = [
+            'high' => ['control' => 0, 'experiment' => 0],
+            'low' => ['control' => 0, 'experiment' => 0],
+        ];
+
+        foreach ($enrolledStudents as $userId => $student) {
+            if ($student->class_group && $student->stratum) {
+                $groupCounts[$student->stratum][$student->class_group]++;
+            }
+        }
+
+        foreach ($attempts as $userId => $attempt) {
+            $newStratum = $attempt->total_score >= $course->threshold ? User::STRATUM_HIGH : User::STRATUM_LOW;
+            
+            $existingClassification = $enrolledStudents->get($userId);
+            
+            $classGroup = null;
+            if ($existingClassification && $existingClassification->class_group) {
+                $classGroup = $existingClassification->class_group;
+            } else {
+                if ($groupCounts[$newStratum][User::GROUP_CON] <= $groupCounts[$newStratum][User::GROUP_EXP]) {
+                    $classGroup = User::GROUP_CON;
+                    $groupCounts[$newStratum][User::GROUP_CON]++;
+                } else {
+                    $classGroup = User::GROUP_EXP;
+                    $groupCounts[$newStratum][User::GROUP_EXP]++;
+                }
+            }
+
+            $dataToUpsert[] = [
+                'course_id' => $course->id,
+                'user_id' => $userId,
+                'stratum' => $newStratum,
+                'class_group' => $classGroup,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        if (!empty($dataToUpsert)) {
+            DB::table('course_user')->upsert(
+                $dataToUpsert,
+                ['course_id', 'user_id'],
+                ['stratum', 'class_group', 'updated_at']
             );
         }
     }

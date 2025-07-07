@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { Inertia } from '@inertiajs/inertia';
 import { Head, usePage } from '@inertiajs/react';
+import { Download } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface Course {
@@ -11,15 +12,22 @@ interface Course {
     threshold: number | null;
 }
 
+interface StudentDetail {
+    id: number;
+    name: string;
+    total_score: number | null;
+    class_group: 'control' | 'experiment' | null;
+    stratum: 'high' | 'low' | null;
+}
+
 const Threshold: React.FC = () => {
     const { course, averageData, testProgress, studentTestDetails } = usePage().props as unknown as {
         course: Course;
         averageData: { average_score: number; student_count: number };
         testProgress: { total_students: number; students_tested: number };
-        studentTestDetails: { id: number; name: string; total_score: number; class_group: string }[];
+        studentTestDetails: StudentDetail[];
     };
 
-    console.log(studentTestDetails);
     const [threshold, setThreshold] = useState<number | ''>(course.threshold ?? '');
 
     const columns = [
@@ -30,11 +38,33 @@ const Threshold: React.FC = () => {
         },
         {
             id: 'total_score',
-            header: 'Total Score',
+            header: 'Pretest Score',
             accessorKey: 'total_score',
             cell: ({ getValue }: any) => {
                 const score = getValue();
                 return score ? Number(score).toFixed(2) : 'N/A';
+            }
+        },
+        {
+            id: 'stratum',
+            header: 'Stratum',
+            accessorKey: 'stratum',
+            cell: ({ getValue }) => {
+                const stratum = getValue() as string | null;
+                if (!stratum) {
+                    return <span className="text-gray-400">-</span>;
+                }
+                
+                const isHigh = stratum === 'high';
+                const textColor = isHigh 
+                    ? 'text-green-700 dark:text-green-400' 
+                    : 'text-yellow-600 dark:text-yellow-400';
+
+                return (
+                    <span className={`font-semibold ${textColor}`}>
+                        {isHigh ? 'High Performance' : 'Low Performance'}
+                    </span>
+                );
             }
         },
         {
@@ -150,9 +180,19 @@ const Threshold: React.FC = () => {
                 </form>
 
                 <div className="mt-8">
-                    <h3 className="mb-4 text-lg font-semibold">Student Test Details</h3>
-                    <NextTable columns={columns} enableSelect={false} mode="table" id="id" load={load} />
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold">Student Test Details</h3>
+
+                    <a href={route('master.course.threshold.export', { id: course.id })}>
+                        <Button variant="outline">
+                            <Download className="mr-2 h-4 w-4" />
+                            Export to Excel
+                        </Button>
+                    </a>
                 </div>
+
+                <NextTable columns={columns} enableSelect={false} mode="table" id="id" load={load} />
+            </div>
             </>
         </>
     );
