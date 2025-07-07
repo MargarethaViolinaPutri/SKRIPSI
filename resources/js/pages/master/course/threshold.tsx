@@ -183,7 +183,7 @@ const Threshold: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Student Test Details</h3>
 
-                    <a href={route('master.course.threshold.export', { id: course.id })}>
+                    <a href={route('master.course.threshold.export', { course: course.id })}>
                         <Button variant="outline">
                             <Download className="mr-2 h-4 w-4" />
                             Export to Excel
