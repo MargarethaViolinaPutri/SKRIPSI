@@ -128,7 +128,7 @@ export default function SolveQuestion({ question }: Props) {
                 </Link>
             </div>
             <h1 className="text-2xl font-bold mb-2">{question.name}</h1>
-            <p className="mb-6">{question.desc}</p>
+            <p className="mb-6 whitespace-pre-wrap">{question.desc}</p>
 
             <div className="mt-4 flex items-center justify-end text-sm">
                 <Clock className="mr-2 h-4 w-4" />

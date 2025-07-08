@@ -58,6 +58,9 @@ Route::group([
         Route::post('', [ModuleController::class, 'store'])->name('store');
         Route::put('{id}', [ModuleController::class, 'update'])->name('update');
         Route::delete('{id}', [ModuleController::class, 'destroy'])->name('destroy');
+
+        Route::get('{module}/gform-import', [ModuleController::class, 'showGformImport'])->name('gform.show');
+        Route::post('{module}/import-gform', [ModuleController::class, 'importGform'])->name('import.gform');
     });
 
     Route::group([

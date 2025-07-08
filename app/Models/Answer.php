@@ -19,6 +19,7 @@ class Answer extends Model
     protected $fillable = [
         'question_id',
         'user_id',
+        'source',
         'student_code',
         'student_code_path',
         'output_accuracy_score',

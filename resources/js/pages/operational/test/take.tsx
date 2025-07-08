@@ -113,7 +113,7 @@ export default function TestTake({ attempt }: Props) {
                 <div className="flex justify-between items-center mb-4">
                     <div>
                         <h1 className="text-2xl font-bold">{question.name}</h1>
-                        <p className="text-gray-600 mt-1">{question.desc}</p>
+                        <p className="text-white-600 mt-1 whitespace-pre-wrap">{question.desc}</p>
                     </div>
                     {attempt.test.duration_in_minutes && (
                         <div className="flex items-center gap-x-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200">

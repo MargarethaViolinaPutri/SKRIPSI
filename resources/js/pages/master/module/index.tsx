@@ -5,11 +5,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import AppLayout from '@/layouts/app-layout';
 import { Base } from '@/types/base';
 import { Module } from '@/types/module';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, router } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
-import { Eye, Plus, Trash } from 'lucide-react';
+import { Eye, Plus, Trash, Upload, Users } from 'lucide-react';
 import { FormEvent, ReactNode, useCallback, useState } from 'react';
 import ModuleForm from './form';
 export default function ModuleIndex() {
@@ -120,6 +120,10 @@ export default function ModuleIndex() {
                         <DropdownMenuContent align="center">
                             <DropdownMenuItem onClick={() => handleDetail(row.original.id)}>
                                 <Eye /> Detail
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => router.visit(route('master.module.gform.show', { module: row.original.id }))}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                <span>Import G-Form Data</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDelete(row.original.id)}>
                                 <Trash /> Delete

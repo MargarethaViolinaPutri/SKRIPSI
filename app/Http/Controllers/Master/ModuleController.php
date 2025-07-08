@@ -2,21 +2,29 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Contract\Master\CourseContract;
 use App\Contract\Master\ModuleContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ModuleRequest;
+use App\Imports\GformAnswersImport;
+use App\Models\Answer;
+use App\Models\Module;
 use App\Utils\WebResponse;
 use App\Utils\MaterialHelper;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ModuleController extends Controller
 {
     protected ModuleContract $service;
+    protected CourseContract $courseService;
 
-    public function __construct(ModuleContract $service)
+    public function __construct(ModuleContract $service, CourseContract $courseService)
     {
         $this->service = $service;
+        $this->courseService = $courseService;
     }
 
     public function index()
@@ -116,5 +124,37 @@ class ModuleController extends Controller
     {
         $data = $this->service->destroy($id);
         return WebResponse::response($data, 'master.module.index');
+    }
+
+    public function showGformImport(Module $module)
+    {
+        $gformAnswers = Answer::whereHas('question', function ($query) use ($module) {
+            $query->where('module_id', $module->id);
+        })
+        ->where('source', 'gform')
+        ->with('user:id,name')
+        ->with('question:id,name')
+        ->latest()
+        ->get();
+
+        return Inertia::render('master/module/GformImport', [
+            'module' => $module,
+            'gformAnswers' => $gformAnswers,
+        ]);
+    }
+
+    public function importGform(Request $request, Module $module)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            Excel::import(new GformAnswersImport($module->id), $request->file('file'));
+            return redirect()->back()->with('success', 'G-Form data imported successfully!');
+        } catch (\Exception $e) {
+            Log::error('GFORM IMPORT FAILED: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Import failed. Please check the file format and column headers. Error: ' . $e->getMessage());
+        }
     }
 }
