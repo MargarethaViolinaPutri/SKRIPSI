@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PasswordInput } from '@/components/ui/password-input';
 import { useForm } from '@inertiajs/react';
+import { Book } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 type LoginForm = {
@@ -34,6 +35,18 @@ export default function Login() {
                 />
             </div>
             <div className="flex flex-col gap-4 p-6 md:p-10">
+                <div className="flex justify-start">
+                    <a 
+                        href="https://drive.google.com/drive/folders/1TQCtvrbVNMzbQZksg-wzMeZlffFU7kmz?usp=drive_link"
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                    >
+                        <Button variant="outline">
+                            <Book className="mr-2 h-4 w-4" />
+                            Access User Guide
+                        </Button>
+                    </a>
+                </div>
                 <div className="flex flex-1 items-center justify-center">
                     <div className="w-full max-w-md">
                         <form onSubmit={onSubmit} className="flex flex-col gap-6">

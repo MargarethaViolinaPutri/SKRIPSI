@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Module } from '@/types/module';
 import { Link, useForm, router } from '@inertiajs/react';
-import { ArrowLeft, Download, Edit, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Download, Edit, ArrowUp, ArrowDown, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import GformImportForm from './GformImportForm';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,6 +13,20 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const formatDuration = (totalSeconds: number): string => {
+    if (!totalSeconds || totalSeconds < 0) return '00:00';
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const paddedMinutes = String(minutes).padStart(2, '0');
+    const paddedSeconds = String(seconds).padStart(2, '0');
+    
+    if (hours > 0) {
+        return `${String(hours).padStart(2, '0')}:${paddedMinutes}:${paddedSeconds}`;
+    }
+    return `${paddedMinutes}:${paddedSeconds}`;
+};
 interface Props {
     module: Module;
     gformAnswers: Paginated<Answer & { user: { name: string }, question: { name: string } }>;
@@ -128,6 +142,7 @@ export default function GformImport({ module, gformAnswers, filters }: Props) {
                                     <TableHead>Student</TableHead>
                                     <TableHead>Question</TableHead>
                                     <TableHead>Answer</TableHead>
+                                    <TableHead className="text-right">Time Spent</TableHead>
                                     <TableHead className="text-right">Score</TableHead>
                                     <TableHead className="text-center">Actions</TableHead>
                                 </TableRow>
@@ -139,6 +154,12 @@ export default function GformImport({ module, gformAnswers, filters }: Props) {
                                             <TableCell className="font-medium">{answer.user?.name || 'N/A'}</TableCell>
                                             <TableCell>{answer.question?.name || 'N/A'}</TableCell>
                                             <TableCell><p className="truncate w-64">{answer.student_code}</p></TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-1 text-gray-600 dark:text-gray-400">
+                                                    <Clock className="h-4 w-4" />
+                                                    {formatDuration(answer.time_spent_in_seconds || 0)}
+                                                </div>
+                                            </TableCell>
                                             <TableCell className="text-right font-semibold">
                                                 {answer.total_score !== null ? Number(answer.total_score).toFixed(2) : <span className="text-gray-400">Not Graded</span>}
                                             </TableCell>

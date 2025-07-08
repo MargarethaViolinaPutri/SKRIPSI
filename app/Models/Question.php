@@ -26,12 +26,12 @@ class Question extends Model
     public function userAnswer()
     {
         return $this->hasOne(Answer::class)
-            ->where('user_id', Auth::id())
+            ->where('user_id', 3)
             ->latestOfMany();
     }
 
     public function userAnswers()
     {
-        return $this->hasMany(Answer::class)->where('user_id', Auth::id());
+        return $this->hasMany(Answer::class)->where('user_id', 3);
     }
 }

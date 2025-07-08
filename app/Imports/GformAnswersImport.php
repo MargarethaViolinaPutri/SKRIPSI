@@ -30,6 +30,14 @@ class GformAnswersImport implements ToCollection, WithChunkReading
     {
         $questions = $this->module->questions;
 
+        $questionIds = $questions->pluck('id');
+
+        if ($questionIds->isNotEmpty()) {
+            Answer::whereIn('question_id', $questionIds)
+                  ->where('source', 'gform')
+                  ->delete();
+        }
+
         foreach ($rows->skip(1) as $row) {
             try {
                 $mainTimestamp = $this->parseExcelDateTime($row[0]);
@@ -48,7 +56,7 @@ class GformAnswersImport implements ToCollection, WithChunkReading
                 }
 
                 foreach ($questions as $index => $question) {
-                    $startColumnIndex = 6 + ($index * 3);
+                    $startColumnIndex = 5 + ($index * 3);
                     $answerColumnIndex = $startColumnIndex + 1;
                     $finishColumnIndex = $startColumnIndex + 2;
 
@@ -64,21 +72,17 @@ class GformAnswersImport implements ToCollection, WithChunkReading
                     $fullStartTime = $this->combineDateAndTime($mainTimestamp, $startTimeValue);
                     $fullFinishTime = $this->combineDateAndTime($mainTimestamp, $finishTimeValue);
 
-                    Answer::updateOrCreate(
-                        [
-                            'question_id' => $question->id,
-                            'user_id' => $user->id,
-                        ],
-                        [
-                            'source' => 'gform',
-                            'student_code' => $studentAnswer,
-                            'total_score' => null,
-                            'structure_score' => null,
-                            'output_accuracy_score' => null,
-                            'started_at' => $fullStartTime,
-                            'finished_at' => $fullFinishTime,
-                        ]
-                    );
+                    Answer::create([
+                        'question_id' => $question->id,
+                        'user_id' => $user->id,
+                        'source' => 'gform',
+                        'student_code' => $studentAnswer,
+                        'total_score' => null,
+                        'structure_score' => null,
+                        'output_accuracy_score' => null,
+                        'started_at' => $fullStartTime,
+                        'finished_at' => $fullFinishTime,
+                    ]);
                 }
             } catch (\Exception $e) {
                 Log::error('GFORM IMPORT: Failed to process row. Error: ' . $e->getMessage(), ['row_data' => json_encode($row)]);
