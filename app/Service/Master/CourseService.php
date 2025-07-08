@@ -175,12 +175,12 @@ class CourseService extends BaseService implements CourseContract
             if ($existingClassification && $existingClassification->class_group) {
                 $classGroup = $existingClassification->class_group;
             } else {
-                if ($groupCounts[$newStratum][User::GROUP_CON] <= $groupCounts[$newStratum][User::GROUP_EXP]) {
-                    $classGroup = User::GROUP_CON;
-                    $groupCounts[$newStratum][User::GROUP_CON]++;
-                } else {
+                if ($groupCounts[$newStratum][User::GROUP_EXP] <= $groupCounts[$newStratum][User::GROUP_CON]) {
                     $classGroup = User::GROUP_EXP;
                     $groupCounts[$newStratum][User::GROUP_EXP]++;
+                } else {
+                    $classGroup = User::GROUP_CON;
+                    $groupCounts[$newStratum][User::GROUP_CON]++;
                 }
             }
 
@@ -201,5 +201,29 @@ class CourseService extends BaseService implements CourseContract
                 ['stratum', 'class_group', 'updated_at']
             );
         }
+    }
+
+    public function getStratumGroupCounts(int $courseId): array
+    {
+        $counts = [
+            'high' => ['control' => 0, 'experiment' => 0],
+            'low' => ['control' => 0, 'experiment' => 0],
+        ];
+
+        $results = DB::table('course_user')
+            ->where('course_id', $courseId)
+            ->whereNotNull('stratum')
+            ->whereNotNull('class_group')
+            ->select('stratum', 'class_group', DB::raw('COUNT(user_id) as count'))
+            ->groupBy('stratum', 'class_group')
+            ->get();
+
+        foreach ($results as $result) {
+            if (isset($counts[$result->stratum][$result->class_group])) {
+                $counts[$result->stratum][$result->class_group] = $result->count;
+            }
+        }
+
+        return $counts;
     }
 }

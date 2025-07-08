@@ -21,11 +21,15 @@ interface StudentDetail {
 }
 
 const Threshold: React.FC = () => {
-    const { course, averageData, testProgress, studentTestDetails } = usePage().props as unknown as {
+    const { course, averageData, testProgress, studentTestDetails, stratumGroupCounts } = usePage().props as unknown as {
         course: Course;
         averageData: { average_score: number; student_count: number };
         testProgress: { total_students: number; students_tested: number };
         studentTestDetails: StudentDetail[];
+        stratumGroupCounts: {
+            high: { control: number; experiment: number; };
+            low: { control: number; experiment: number; };
+        };
     };
 
     const [threshold, setThreshold] = useState<number | ''>(course.threshold ?? '');
@@ -152,6 +156,38 @@ const Threshold: React.FC = () => {
                                     width: `${testProgress.total_students > 0 ? (testProgress.students_tested / testProgress.total_students) * 100 : 0}%`
                                 }}
                             ></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-6">
+                    <h3 className="text-base font-semibold mb-2">Group Distribution</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-900/20">
+                            <p className="font-bold text-green-800 dark:text-green-300">High Performance</p>
+                            <div className="mt-2 space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                    <span>Control Group:</span>
+                                    <span className="font-semibold">{stratumGroupCounts.high.control} students</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Experiment Group:</span>
+                                    <span className="font-semibold">{stratumGroupCounts.high.experiment} students</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="border rounded-lg p-4 bg-yellow-50 dark:bg-yellow-900/20">
+                            <p className="font-bold text-yellow-800 dark:text-yellow-300">Low Performance</p>
+                            <div className="mt-2 space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                    <span>Control Group:</span>
+                                    <span className="font-semibold">{stratumGroupCounts.low.control} students</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>Experiment Group:</span>
+                                    <span className="font-semibold">{stratumGroupCounts.low.experiment} students</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

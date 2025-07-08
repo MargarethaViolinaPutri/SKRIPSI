@@ -75,11 +75,13 @@ class CourseController extends Controller
         $averageData = $this->service->getAverageScoreAndStudentCount($id);
         $testProgress = $this->service->getTestProgress($id);
         $studentTestDetails = $this->service->getStudentTestDetails($id);
+        $stratumGroupCounts = $this->service->getStratumGroupCounts($id);
         return Inertia::render('master/course/threshold', [
             'course' => $data,
             'averageData' => $averageData,
             'testProgress' => $testProgress,
             'studentTestDetails' => $studentTestDetails,
+            'stratumGroupCounts' => $stratumGroupCounts,
         ]);
     }
 

@@ -13,4 +13,5 @@ interface CourseContract extends BaseContract {
     public function getTestProgress(int $courseId): array;
     public function getStudentTestDetails(int $courseId): Collection;
     public function classifyStudentsByThreshold(Course $course): void;
+    public function getStratumGroupCounts(int $courseId): array;
 }
