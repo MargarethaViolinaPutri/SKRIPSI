@@ -61,6 +61,7 @@ Route::group([
 
         Route::get('{module}/gform-import', [ModuleController::class, 'showGformImport'])->name('gform.show');
         Route::post('{module}/import-gform', [ModuleController::class, 'importGform'])->name('import.gform');
+        Route::put('gform-answers/{answer}', [ModuleController::class, 'updateGformScore'])->name('gform.update-score');
     });
 
     Route::group([

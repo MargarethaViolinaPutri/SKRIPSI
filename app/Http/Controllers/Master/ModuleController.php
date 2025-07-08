@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Contract\Master\CourseContract;
 use App\Contract\Master\ModuleContract;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Master\GformScoreRequest;
 use App\Http\Requests\ModuleRequest;
 use App\Imports\GformAnswersImport;
 use App\Models\Answer;
@@ -126,21 +127,36 @@ class ModuleController extends Controller
         return WebResponse::response($data, 'master.module.index');
     }
 
-    public function showGformImport(Module $module)
+    public function showGformImport(Request $request, Module $module)
     {
-        $gformAnswers = Answer::whereHas('question', function ($query) use ($module) {
+        $sortBy = $request->input('sort_by', 'question.name');
+        $sortOrder = $request->input('order', 'asc');
+
+        $query = Answer::whereHas('question', function ($query) use ($module) {
             $query->where('module_id', $module->id);
         })
         ->where('source', 'gform')
-        ->with('user:id,name')
-        ->with('question:id,name')
-        ->latest()
-        ->get();
+        ->with('user:id,name', 'question:id,name');
+
+        if ($sortBy === 'user.name') {
+            $query->join('users', 'answers.user_id', '=', 'users.id')->orderBy('users.name', $sortOrder);
+        } else {
+            $query->join('questions', 'answers.question_id', '=', 'questions.id')->orderBy('questions.name', $sortOrder);
+        }
+
+        $gformAnswers = $query->select('answers.*')->paginate(20)->withQueryString();
 
         return Inertia::render('master/module/GformImport', [
             'module' => $module,
             'gformAnswers' => $gformAnswers,
+            'filters' => $request->only(['sort_by', 'order']),
         ]);
+    }
+
+    public function updateGformScore(GformScoreRequest $request, Answer $answer)
+    {
+        $answer->update($request->validated());
+        return redirect()->back()->with('success', 'Score updated successfully!');
     }
 
     public function importGform(Request $request, Module $module)
