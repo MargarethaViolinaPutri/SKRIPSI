@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class BaseService implements BaseContract
@@ -94,7 +95,7 @@ class BaseService implements BaseContract
                 'per_page' => $result->perPage(),
             ];
         } catch (QueryException $e) {
-            \Log::error('QueryException in Service::all(): '.$e->getMessage()
+            Log::error('QueryException in Service::all(): '.$e->getMessage()
                         .' | SQL: '.$e->getSql()
                         .' | Bindings: '.json_encode($e->getBindings()));
             return [
@@ -185,6 +186,8 @@ class BaseService implements BaseContract
     public function update(array $conditions = [], $payloads)
     {
         try {
+            Log::info('BaseService update called', ['conditions' => $conditions, 'payloads' => $payloads]);
+
             if (!is_null($this->guardForeignKey)) {
                 $payloads[$this->guardForeignKey] = $this->userID();
             }
@@ -200,6 +203,8 @@ class BaseService implements BaseContract
             $model = $this->model::query()->where($conditions);
             $result = $model->update($payloads);
 
+            Log::info('BaseService update result', ['affected_rows' => $result]);
+
             foreach ($this->fileKeys as $fileKey) {
                 $model->addMultipleMediaFromRequest([$fileKey])
                     ->each(function ($image) use ($fileKey) {
@@ -211,6 +216,7 @@ class BaseService implements BaseContract
             return $result;
         } catch (Exception $e) {
             DB::rollBack();
+            Log::error('BaseService update exception', ['exception' => $e]);
             return $e;
         }
     }

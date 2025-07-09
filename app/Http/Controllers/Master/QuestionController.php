@@ -12,6 +12,7 @@ use App\Http\Requests\StoreFibRequest ;
 use App\Utils\WebResponse;
 use Inertia\Inertia;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Log;
 
 class QuestionController extends Controller
 {
@@ -86,12 +87,16 @@ class QuestionController extends Controller
     public function update(QuestionRequest $request, $id)
     {
         $payload = $request->validated();
+
+        Log::info('Update Question payload:', $payload);
+
         $data = $this->service->update(
-            [
-                ['id', '=', $id],
-            ],
+            ['id' => $id],
             $payload
         );
+
+        Log::info('Update Question result:', ['result' => $data]);
+
         return WebResponse::response($data, 'master.question.index');
     }
 

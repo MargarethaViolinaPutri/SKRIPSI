@@ -44,8 +44,8 @@ class QuestionService extends BaseService implements QuestionContract
                 'module_id' => $base['module_id'],
                 'name' => 'Question ' . $currentNumber,
                 'desc' => $q['narasi'],
-                'test' => $q['kode_utuh'],
-                'code' => $q['kode_blank'],
+                'code' => $q['kode_utuh'],   // full code saved in 'code'
+                'test' => $q['kode_blank'],  // blank code saved in 'test'
             ]);
             $currentNumber++;
         }
@@ -74,9 +74,9 @@ class QuestionService extends BaseService implements QuestionContract
             return [
                 'question_number' => $index + 1,
                 'narasi' => $q->desc,
-                'kode_blank' => $q->test,
-                'kode_utuh' => $q->code,
-                'test' => $q->code, // include test for compatibility
+                'kode_blank' => $q->test,  // blank code from 'test'
+                'kode_utuh' => $q->code,   // full code from 'code'
+                'test' => $q->test,        // include test for compatibility
             ];
         });
 

@@ -152,13 +152,27 @@ export default function QuestionForm({ question }: QuestionFormProps) {
                 return rest;
             });
             payload.questions = updatedQuestions;
+
+            // Add blankCode as 'code' field and full code as 'test' field to match backend expectation
+            payload.code = blankCode;
+            payload.test = data.test;
+
+            // Filter out any extra fields not part of question model
+            const allowedFields = ['module_id', 'name', 'desc', 'code', 'test', 'questions'];
+            const filteredPayload: any = {};
+            for (const key of allowedFields) {
+                if (key in payload) {
+                    filteredPayload[key] = payload[key];
+                }
+            }
+
             if (isDetail && question?.id) {
                 await axios.post(route('master.question.update', question.id), {
-                    ...payload,
+                    ...filteredPayload,
                     _method: 'PUT',
                 });
             } else {
-                await axios.post(route('master.question.store'), payload);
+                await axios.post(route('master.question.store'), filteredPayload);
             }
             router.visit(route('master.question.index'));
         } catch (err: any) {
