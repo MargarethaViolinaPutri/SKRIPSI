@@ -293,7 +293,7 @@ result
                     <InputError message={errors?.code} />
                     <div className="flex gap-2">
                         <Button variant="outline" disabled={processing} asChild>
-                            <Link href={route('master.user.index')}>Back</Link>
+                            <Link href={route('master.question.index')}>Back</Link>
                         </Button>
                         <Button
                             variant="outline"
