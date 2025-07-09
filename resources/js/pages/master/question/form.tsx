@@ -26,6 +26,8 @@ export default function QuestionForm({ question }: QuestionFormProps) {
         desc: question?.desc || '',
         module_id: question?.module_id || question?.module?.id || 0,
         module: question?.module ? { id: question.module.id, name: question.module.name || '' } : { id: 0, name: '' },
+        code: question?.code || '',
+        test: question?.test || '',
     };
 
     const { data, setData, errors, processing } = useForm<Question>(initialData);
@@ -263,7 +265,7 @@ result
                                 <Editor
                                     className="w-full border"
                                     value={data.test}
-                                    onChange={(e) => setData('code', e || '')}
+                                    onChange={(e) => setData('test', e || '')}
                                     defaultLanguage="python"
                                     height="200px"
                                     theme="vs-light"
@@ -277,7 +279,6 @@ result
                                     value={blankCode}
                                     onChange={(e) => {
                                         setBlankCode(e || '');
-                                        setData('test', e || '');
                                     }}
                                     defaultLanguage="python"
                                     height="200px"
