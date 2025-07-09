@@ -18,7 +18,7 @@ type QuestionFormProps = {
 
 export default function QuestionForm({ question }: QuestionFormProps) {
     const isDetail = question && question.id != null;
-    const [blankCode, setBlankCode] = useState<string>(question && question.id ? question.test || '' : '');
+    const [blankCode, setBlankCode] = useState<string>(question && question.id ? question.code || '' : '');
 
     const initialData = {
         ...question,
@@ -262,7 +262,7 @@ result
                                 <Label className="mb-1 text-sm font-semibold">Code Utuh (Main Code)</Label>
                                 <Editor
                                     className="w-full border"
-                                    value={data.code}
+                                    value={data.test}
                                     onChange={(e) => setData('code', e || '')}
                                     defaultLanguage="python"
                                     height="200px"

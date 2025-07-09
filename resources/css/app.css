@@ -114,38 +114,77 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    /* Base colors */
+    --background: oklch(16.891% 0.0167 244.806); /* biru keabu gelap */
+    --foreground: oklch(0.88 0.02 280); /* Soft light gray for text */
+
+    /* Cards and popovers */
+    --card: oklch(0.16 0.03 280);
+    --card-foreground: var(--foreground);
+    --popover: var(--card);
+    --popover-foreground: var(--foreground);
+
+    /* Primary colors */
+    --primary: oklch(0.75 0.15 290); /* Vivid purple-blue */
+    --primary-foreground: oklch(0.95 0.01 290); /* Light foreground */
+
+    /* Secondary/accent/muted */
+    --secondary: oklch(0.28 0.04 280); /* Dim blue-gray */
+    --secondary-foreground: var(--foreground);
+    --muted: oklch(0.25 0.02 280);
+    --muted-foreground: oklch(0.6 0.01 280);
+    --accent: oklch(0.35 0.06 280);
+    --accent-foreground: var(--foreground);
+
+    /* Destructive colors (e.g. errors) */
+    --destructive: oklch(0.45 0.15 25); /* Bold red-orange */
+    --destructive-foreground: oklch(0.9 0.03 25);
+
+    /* Borders and inputs */
+    --border: oklch(0.22 0.02 280);
+    --input: var(--border);
+    --ring: oklch(0.4 0.05 280);
+
+    /* Charts (distinct colors) */
+    --chart-1: oklch(0.55 0.2 260);
+    --chart-2: oklch(0.6 0.18 150);
+    --chart-3: oklch(0.7 0.15 70);
+    --chart-4: oklch(0.6 0.2 300);
+    --chart-5: oklch(0.65 0.18 30);
+
+    /* Sidebar (semi-transparent and subtle) */
+    --sidebar: oklch(19.158% 0.0228 249.119); /* biru keabu gelap */
+    --sidebar-foreground: oklch(100% 0.00011 271.152);
+
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+
+    --sidebar-accent: oklch(0.35 0.05 250); /* aksen hover */
+    --sidebar-accent-foreground: var(--foreground);
+
+    --sidebar-border: oklch(0.26 0.02 250);
+    --sidebar-ring: oklch(0.32 0.03 250);
+    --sidebar-ring: oklch(0.3 0.04 280);
+}
+
+/* Warna dasar tombol di dark mode */
+.dark .bg-blue-600 {
+    background-color: oklch(26.871% 0.06799 265.657); /* Biru cerah yang nyaman di mata */
+}
+
+/* Hover effect */
+.dark .hover\:bg-blue-700:hover {
+    background-color: oklch(19.538% 0.0539 267.015); /* Sedikit lebih gelap untuk efek hover */
+}
+
+/* Ring fokus saat tombol aktif (aksesibilitas) */
+.dark .focus-visible\:ring-blue-500:focus-visible {
+    box-shadow: 0 0 0 3px oklch(60% 0.18 265 / 0.4); /* Transparan dan lembut */
+}
+
+/* Warna teks pada tombol di dark mode */
+.dark .text-white {
+    color: oklch(97% 0.01 260); /* Putih sedikit redup agar tidak silau */
 }
 
 @layer base {
@@ -159,7 +198,33 @@
     }
 }
 
+[data-sidebar='menu-button'] {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+}
+
+[data-sidebar='menu-button']:hover {
+    background-color: #5a7bd8; /* Slightly lighter purple */
+    color: #ffffff;
+}
+
+.dark [data-sidebar='menu-button']:hover {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
+}
+
+[data-sidebar='menu-button']:focus-visible {
+    outline: 2px solid #7c9cff;
+    outline-offset: 2px;
+}
+
 [data-sidebar='menu-button'][data-active='true'] {
     background-color: #3d67ac; /* Light purple background */
     color: #ffffff; /* Purple text */
+}
+
+.dark [data-sidebar='menu-button'][data-active='true'] {
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
 }

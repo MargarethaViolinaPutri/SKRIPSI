@@ -36,9 +36,9 @@ export default function Login() {
             </div>
             <div className="flex flex-col gap-4 p-6 md:p-10">
                 <div className="flex justify-start">
-                    <a 
+                    <a
                         href="https://drive.google.com/drive/folders/1TQCtvrbVNMzbQZksg-wzMeZlffFU7kmz?usp=drive_link"
-                        target="_blank" 
+                        target="_blank"
                         rel="noopener noreferrer"
                     >
                         <Button variant="outline">
@@ -78,7 +78,7 @@ export default function Login() {
                                     />
                                     <InputError message={errors?.password} />
                                 </div>
-                                <Button disabled={processing} type="submit" className="w-full">
+                                <Button disabled={processing} type="submit" className="w-full" variant="gray">
                                     Login
                                 </Button>
                             </div>

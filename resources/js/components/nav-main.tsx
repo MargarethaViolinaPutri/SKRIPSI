@@ -3,13 +3,33 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import React from 'react';
 
-export function NavMain({ items = [], hover = '', color = '' }: { items: NavItem[]; hover?: string; color?: string }) {
+export function NavMain({
+    items = [],
+    hover = '',
+    color = '',
+    searchTerm = '',
+}: {
+    items: NavItem[];
+    hover?: string;
+    color?: string;
+    searchTerm?: string;
+}) {
     const page = usePage();
-    console.log('Current page URL:', page.url);
+
+    // Filter items based on searchTerm (case-insensitive)
+    const filteredItems = items
+        .map((group) => {
+            const filteredChildren = group.children?.filter((child) => child.title.toLowerCase().includes(searchTerm.toLowerCase()));
+            if (filteredChildren && filteredChildren.length > 0) {
+                return { ...group, children: filteredChildren };
+            }
+            return null;
+        })
+        .filter(Boolean) as NavItem[];
+
     return (
         <SidebarGroup className="px-2 py-0">
-            {items.map((item) => {
-                console.log('Nav item href:', item.href);
+            {filteredItems.map((item) => {
                 return (
                     <React.Fragment key={item.title}>
                         <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
@@ -25,15 +45,9 @@ export function NavMain({ items = [], hover = '', color = '' }: { items: NavItem
                                         return page.url.startsWith(item.href);
                                     }
                                 })();
-                                console.log(`Checking active state for ${item.title}:`, isActive);
                                 return (
                                     <SidebarMenuItem key={item.title}>
-                                        <SidebarMenuButton
-                                            asChild
-                                            isActive={!!isActive}
-                                            className={`${color} ${hover} ${isActive ? 'bg-blue-300 font-semibold text-blue-700' : ''}`}
-                                            tooltip={{ children: item.title }}
-                                        >
+                                        <SidebarMenuButton asChild isActive={!!isActive} className="" tooltip={{ children: item.title }}>
                                             <Link href={item.href ?? '#'} prefetch>
                                                 {item.icon && <item.icon />}
                                                 <span>{item.title}</span>
