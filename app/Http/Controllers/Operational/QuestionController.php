@@ -55,7 +55,7 @@ class QuestionController extends Controller
                 'created_at',
             ],
             paginate: true,
-            relation: ['userAnswer'],
+            relation: ['userAnswers'],
             withCount: ['userAnswers'],
             perPage: request()->get('per_page', 10)
         );
@@ -67,15 +67,16 @@ class QuestionController extends Controller
         $questions = collect($result['items']);
 
         $transformedQuestions = $questions->map(function ($question) {
+            $latestAnswer = $question->userAnswers->sortByDesc('id')->first();
             return [
                 'id' => $question->id,
                 'name' => $question->name,
                 'desc' => $question->desc,
                 'user_answers_count' => $question->user_answers_count,
                 
-                'user_answer' => $question->userAnswer ? [
-                    'total_score' => (float) $question->userAnswer->total_score,
-                    'time_spent_in_seconds' => $question->userAnswer->time_spent_in_seconds,
+                'user_answer' => $latestAnswer ? [
+                    'total_score' => (float) $latestAnswer->total_score,
+                    'time_spent_in_seconds' => $latestAnswer->time_spent_in_seconds,
                 ] : null,
             ];
         });
