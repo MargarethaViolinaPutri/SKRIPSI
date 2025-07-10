@@ -48,7 +48,9 @@ class LMSController extends Controller
     {
         $userId = Auth::id();
         $course = Course::with([
-            'modules',
+            'modules.questions' => function ($query) {
+                $query->with('userAnswers')->withCount('userAnswers');
+            },
             'tests' => function ($query) {
                 $query->where('status', 'published')->with('userCompletedAttempts');
             }

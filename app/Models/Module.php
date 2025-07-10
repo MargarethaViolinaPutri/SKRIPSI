@@ -62,19 +62,30 @@ class Module extends Model implements HasMedia
 
     public function getPerformanceAttribute()
     {
-        $answeredQuestions = $this->questions->filter(fn($q) => $q->userAnswer !== null);
+        if (! $this->relationLoaded('questions.userAnswers')) {
+            $this->load('questions.userAnswers');
+        }
+
+        $answeredQuestions = $this->questions->filter(function ($question) {
+            return $question->userAnswers->isNotEmpty();
+        });
 
         if ($answeredQuestions->isEmpty()) {
             return null;
         }
         
-        $totalAttempts = $this->questions->sum('user_answers_count');
+        $totalScore = $answeredQuestions->sum(function ($question) {
+            $latestAnswer = $question->userAnswers->sortByDesc('id')->first();
+            return (float) $latestAnswer->total_score;
+        });
+
+        $totalAttempts = $this->questions->reduce(function ($carry, $question) {
+            return $carry + $question->userAnswers->count();
+        }, 0);
         
         $totalTimeSpentSeconds = $this->questions->reduce(function ($carry, $question) {
             return $carry + $question->userAnswers->sum('time_spent_in_seconds');
         }, 0);
-
-        $totalScore = $answeredQuestions->sum(fn($q) => (float) $q->userAnswer->total_score);
         $questionsAnsweredCount = $answeredQuestions->count();
         $totalQuestions = $this->questions->count();
 
