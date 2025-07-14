@@ -16,12 +16,14 @@ class TestReportExport implements FromCollection, WithHeadings, WithStyles, With
 {
     protected ?int $courseId;
     protected ?string $name;
+    protected ?string $classGroup;
     protected ?Course $course;
 
-    public function __construct(?int $courseId, ?string $name)
+    public function __construct(?int $courseId, ?string $name, ?string $classGroup)
     {
         $this->courseId = $courseId;
         $this->name = $name;
+        $this->classGroup = $classGroup;
         $this->course = $courseId ? Course::find($courseId) : null;
     }
 
@@ -32,7 +34,7 @@ class TestReportExport implements FromCollection, WithHeadings, WithStyles, With
 
     public function headings(): array
     {
-        return ['Student Name', 'Pre-Test Score', 'Post-Test Score', 'Delay-Test Score'];
+        return ['Student Name', 'Class Group', 'Pre-Test Score', 'Post-Test Score', 'Delay-Test Score'];
     }
 
     public function collection()
@@ -48,11 +50,12 @@ class TestReportExport implements FromCollection, WithHeadings, WithStyles, With
             ->where('roles.name', 'student')
             ->select(
                 'u.name as student_name',
+                'cu.class_group',
                 DB::raw("MAX(CASE WHEN t.type = 'pretest' THEN ta.total_score END) as pretest_score"),
                 DB::raw("MAX(CASE WHEN t.type = 'posttest' THEN ta.total_score END) as posttest_score"),
                 DB::raw("MAX(CASE WHEN t.type = 'delaytest' THEN ta.total_score END) as delaytest_score")
             )
-            ->groupBy('u.id', 'u.name');
+            ->groupBy('u.id', 'u.name', 'cu.class_group');
 
         if ($this->courseId) {
             $query->where('cu.course_id', $this->courseId);
@@ -62,7 +65,22 @@ class TestReportExport implements FromCollection, WithHeadings, WithStyles, With
             $query->where('u.name', 'LIKE', '%' . $this->name . '%');
         }
         
+        if ($this->classGroup) {
+            $query->where('cu.class_group', $this->classGroup);
+        }
+
         return $query->get();
+    }
+
+    public function map($row): array
+    {
+        return [
+            $row->student_name,
+            ucfirst($row->class_group ?? '-'),
+            $row->pretest_score ? number_format($row->pretest_score, 2) : '-',
+            $row->posttest_score ? number_format($row->posttest_score, 2) : '-',
+            $row->delaytest_score ? number_format($row->delaytest_score, 2) : '-',
+        ];
     }
 
     public function styles(Worksheet $sheet)

@@ -109,12 +109,12 @@ export default function ModuleReport({ reportData, courses, filters }: Props) {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-8 w-[250px]"
-                                disabled={!selectedCourse} // Nonaktifkan jika belum pilih course
+                                disabled={!selectedCourse}
                             />
                         </div>
                     </div>
                 </div>
-                <a href={route('reports.module.export', { course_id: selectedCourse, name: searchTerm })}>
+                <a href={route('reports.module.export', { course_id: selectedCourse, name: searchTerm, class_group: selectedGroup  })}>
                     <Button variant="outline" disabled={!selectedCourse || selectedCourse === 'all'}>
                         <Download className="mr-2 h-4 w-4"/>
                         Export to Excel

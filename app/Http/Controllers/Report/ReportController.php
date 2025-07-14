@@ -18,33 +18,30 @@ class ReportController extends Controller
     {
         $courses = Course::orderBy('name')->get(['id', 'name']);
         
-        $selectedCourseId = $request->input('course_id');
-        $searchTerm = $request->input('name');
+        $filters = $request->only(['course_id', 'name', 'class_group']);
+        
+        $selectedCourseId = ($filters['course_id'] ?? null) && $filters['course_id'] !== 'all' ? (int)$filters['course_id'] : null;
+        $searchTerm = $filters['name'] ?? null;
+        $selectedGroup = ($filters['class_group'] ?? null) && $filters['class_group'] !== 'all' ? $filters['class_group'] : null;
 
-        $courseIdForQuery = ($selectedCourseId && $selectedCourseId !== 'all') ? (int)$selectedCourseId : null;
-
-        $reportData = (new TestReportExport($courseIdForQuery, $searchTerm))->collection();
+        $reportData = (new TestReportExport($selectedCourseId, $searchTerm, $selectedGroup))->collection();
         
         return Inertia::render('report/test', [
             'reportData' => $reportData,
             'courses' => $courses,
-            'filters' => [
-                'course_id' => $selectedCourseId,
-                'name' => $searchTerm,
-            ],
+            'filters' => $filters,
         ]);
     }
 
     public function exportTestReport(Request $request)
     {
-        $selectedCourseId = $request->input('course_id');
+        $selectedCourseId = $request->input('course_id') && $request->input('course_id') !== 'all' ? (int)$request->input('course_id') : null;
         $searchTerm = $request->input('name');
-
-        $courseIdForQuery = ($selectedCourseId && $selectedCourseId !== 'all') ? (int)$selectedCourseId : null;
+        $selectedGroup = $request->input('class_group') && $request->input('class_group') !== 'all' ? $request->input('class_group') : null;
 
         $fileName = 'test_report_' . now()->format('Y-m-d') . '.xlsx';
         
-        return Excel::download(new TestReportExport($courseIdForQuery, $searchTerm), $fileName);
+        return Excel::download(new TestReportExport($selectedCourseId, $searchTerm, $selectedGroup), $fileName);
     }
 
     public function moduleReport(Request $request)

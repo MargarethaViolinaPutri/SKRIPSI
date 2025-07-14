@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 
 interface ReportRow {
     student_name: string;
+    class_group: 'control' | 'experiment' | null;
     pretest_score: string | number | null;
     posttest_score: string | number | null;
     delaytest_score: string | number | null;
@@ -22,29 +23,30 @@ interface Props {
     filters: { 
         course_id: string | null;
         name: string | null;
+        class_group: string | null;
      };
 }
 
 export default function TestReport({ reportData, courses, filters }: Props) {
     const [selectedCourse, setSelectedCourse] = useState(filters.course_id || 'all');
     const [searchTerm, setSearchTerm] = useState(filters.name || '');
+    const [selectedGroup, setSelectedGroup] = useState(filters.class_group || 'all');
 
     useEffect(() => {
         const handler = setTimeout(() => {
-            router.get(
-                route('reports.test'), 
-                { course_id: selectedCourse, name: searchTerm }, 
-                {
-                    preserveState: true,
-                    replace: true,
-                }
-            );
+            const queryData: any = {};
+            if (selectedCourse && selectedCourse !== 'all') queryData.course_id = selectedCourse;
+            if (searchTerm) queryData.name = searchTerm;
+            if (selectedGroup && selectedGroup !== 'all') queryData.class_group = selectedGroup;
+
+            router.get(route('reports.test'), queryData, {
+                preserveState: true,
+                replace: true,
+            });
         }, 500);
 
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [searchTerm, selectedCourse]);
+        return () => clearTimeout(handler);
+    }, [searchTerm, selectedCourse, selectedGroup]);
 
     const handleCourseFilterChange = (courseId: string) => {
         setSelectedCourse(courseId);
@@ -77,6 +79,17 @@ export default function TestReport({ reportData, courses, filters }: Props) {
                         </Select>
                     </div>
                     <div>
+                        <Label>Class Group</Label>
+                        <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                            <SelectTrigger className="w-[180px]"><SelectValue placeholder="All Groups" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Groups</SelectItem>
+                                <SelectItem value="control">Control</SelectItem>
+                                <SelectItem value="experiment">Experiment</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
                         <Label htmlFor="name-filter">Search by Student Name</Label>
                         <div className="relative">
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -91,7 +104,7 @@ export default function TestReport({ reportData, courses, filters }: Props) {
                         </div>
                     </div>
                 </div>
-                <a href={route('reports.test.export', { course_id: selectedCourse })}>
+                <a href={route('reports.test.export', { course_id: selectedCourse, name: searchTerm, class_group: selectedGroup })}>
                     <Button variant="outline">
                         <Download className="mr-2 h-4 w-4"/>
                         Export to Excel
@@ -105,6 +118,7 @@ export default function TestReport({ reportData, courses, filters }: Props) {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Student Name</TableHead>
+                            <TableHead>Class Group</TableHead>
                             <TableHead className="text-right">Pre-Test Score</TableHead>
                             <TableHead className="text-right">Post-Test Score</TableHead>
                             <TableHead className="text-right">Delay-Test Score</TableHead>
@@ -114,6 +128,7 @@ export default function TestReport({ reportData, courses, filters }: Props) {
                         {reportData.length > 0 ? reportData.map((row, index) => (
                             <TableRow key={index}>
                                 <TableCell className="font-medium">{row.student_name}</TableCell>
+                                <TableCell className="capitalize">{row.class_group ?? '-'}</TableCell>
                                 <TableCell className="text-right">{row.pretest_score ? Number(row.pretest_score).toFixed(2) : '-'}</TableCell>
                                 <TableCell className="text-right">{row.posttest_score ? Number(row.posttest_score).toFixed(2) : '-'}</TableCell>
                                 <TableCell className="text-right">{row.delaytest_score ? Number(row.delaytest_score).toFixed(2) : '-'}</TableCell>
