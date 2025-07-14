@@ -46,6 +46,11 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
      */
     public function collection()
     {
+        $dbDriver = DB::connection()->getDriverName();
+        $timeSpentExpression = ($dbDriver === 'mysql')
+            ? 'SUM(TIMESTAMPDIFF(SECOND, a.started_at, a.finished_at))'
+            : 'SUM(EXTRACT(EPOCH FROM (a.finished_at - a.started_at)))';
+
         $query = DB::table('users as u')
             ->join('course_user as cu', 'u.id', '=', 'cu.user_id')
             ->leftJoin('answers as a', 'u.id', '=', 'a.user_id')
@@ -57,7 +62,7 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
                 'cu.class_group',
                 DB::raw('AVG(a.total_score) as average_score'),
                 DB::raw('COUNT(a.id) as total_attempts'),
-                DB::raw('SUM(TIMESTAMPDIFF(SECOND, a.started_at, a.finished_at)) as total_time_spent_seconds')
+                DB::raw($timeSpentExpression . ' as total_time_spent_seconds')
             )
             ->groupBy('u.id', 'u.name', 'cu.class_group');
 

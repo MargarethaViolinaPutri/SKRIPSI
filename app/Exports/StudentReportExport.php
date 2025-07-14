@@ -48,6 +48,11 @@ class StudentReportExport implements FromCollection, WithHeadings, WithMapping, 
 
     public function collection()
     {
+        $dbDriver = DB::connection()->getDriverName();
+        $timeSpentExpression = ($dbDriver === 'mysql')
+            ? 'TIMESTAMPDIFF(SECOND, a.started_at, a.finished_at)'
+            : 'EXTRACT(EPOCH FROM (a.finished_at - a.started_at))';
+
         $attemptsCountSubquery = DB::table('answers as a_sub')
             ->select('user_id', 'question_id', DB::raw('COUNT(id) as total_attempts'))
             ->groupBy('user_id', 'question_id');
@@ -71,7 +76,7 @@ class StudentReportExport implements FromCollection, WithHeadings, WithMapping, 
                 'a.structure_score',
                 'a.output_accuracy_score as output_score',
                 'attempts_count.total_attempts',
-                DB::raw('TIMESTAMPDIFF(SECOND, a.started_at, a.finished_at) as time_spent_seconds')
+                DB::raw($timeSpentExpression . ' as time_spent_seconds')
             );
 
         if ($this->questionId) {
