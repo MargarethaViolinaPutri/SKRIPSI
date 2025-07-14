@@ -43,6 +43,27 @@ const master: NavItem = {
     ],
 };
 
+const report: NavItem = {
+    title: 'Report',
+    children: [
+        {
+            title: 'Test',
+            icon: Ruler,
+            href: route('reports.test'),
+        },
+        {
+            title: 'Module',
+            icon: Ruler,
+            href: route('reports.module'),
+        },
+        {
+            title: 'Student',
+            icon: Ruler,
+            href: route('reports.student'),
+        },
+    ],
+};
+
 const operational: NavItem = {
     title: 'Operational',
     children: [
@@ -76,9 +97,9 @@ export function AppSidebar() {
     let navigation: NavItem[] = [];
 
     if (role === 'admin') {
-        navigation = [master, setting];
+        navigation = [master, report, setting];
     } else if (role === 'teacher') {
-        navigation = [master, operational];
+        navigation = [master, report, operational];
     } else if (role === 'student') {
         navigation = [operational];
     }
