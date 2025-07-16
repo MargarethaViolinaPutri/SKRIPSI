@@ -7,10 +7,13 @@ use App\Exports\StudentReportExport;
 use App\Exports\TestReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Module;
 use App\Models\Question;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
@@ -83,24 +86,33 @@ class ReportController extends Controller
     {
         $courses = Course::orderBy('name')->get(['id', 'name']);
         
-        $filters = $request->only(['course_id', 'question_id', 'name']);
+        $filters = $request->only(['course_id', 'module_id', 'user_id']);
         
         $selectedCourseId = ($filters['course_id'] ?? null) && $filters['course_id'] !== 'all' ? (int)$filters['course_id'] : null;
-        $selectedQuestionId = ($filters['question_id'] ?? null) && $filters['question_id'] !== 'all' ? (int)$filters['question_id'] : null;
-        $searchTerm = $filters['name'] ?? null;
+        $selectedModuleId = ($filters['module_id'] ?? null) && $filters['module_id'] !== 'all' ? (int)$filters['module_id'] : null;
+        $selectedUserId = ($filters['user_id'] ?? null) && $filters['user_id'] !== 'all' ? (int)$filters['user_id'] : null;
 
-        $questions = $selectedCourseId 
-            ? Question::whereHas('module', fn($q) => $q->where('course_id', $selectedCourseId))->orderBy('name')->get(['id', 'name'])
-            : collect();
+        $modules = collect();
+        if ($selectedCourseId) {
+            $modules = Module::where('course_id', $selectedCourseId)->orderBy('name')->get(['id', 'name']);
+        }
+
+        $students = collect();
+        if ($selectedCourseId) {
+            $students = User::whereHas('courses', fn($q) => $q->where('course_id', $selectedCourseId))
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
 
         $reportData = $selectedCourseId
-            ? (new StudentReportExport($selectedCourseId, $selectedQuestionId, $searchTerm))->collection()
+            ? (new StudentReportExport($selectedCourseId, $selectedModuleId, $selectedUserId))->collection()
             : collect();
         
         return Inertia::render('report/student', [
             'reportData' => $reportData,
             'courses' => $courses,
-            'questions' => $questions,
+            'modules' => $modules,
+            'students' => $students,
             'filters' => $filters,
         ]);
     }
@@ -108,12 +120,23 @@ class ReportController extends Controller
     public function exportStudentReport(Request $request)
     {
         $selectedCourseId = $request->input('course_id') && $request->input('course_id') !== 'all' ? (int)$request->input('course_id') : null;
-        $selectedQuestionId = $request->input('question_id') && $request->input('question_id') !== 'all' ? (int)$request->input('question_id') : null;
-        $searchTerm = $request->input('name');
+        $selectedModuleId = $request->input('module_id') && $request->input('module_id') !== 'all' ? (int)$request->input('module_id') : null;
+        $selectedUserId = $request->input('user_id') && $request->input('user_id') !== 'all' ? (int)$request->input('user_id') : null;
 
         abort_if(!$selectedCourseId, 400, 'Please select a course to export.');
 
-        $fileName = 'student_detail_report_' . now()->format('Y-m-d') . '.xlsx';
-        return Excel::download(new StudentReportExport($selectedCourseId, $selectedQuestionId, $searchTerm), $fileName);
+        $course = Course::find($selectedCourseId);
+        $fileName = 'report_on_' . Str::slug($course->name ?? 'course');
+
+        if ($selectedUserId) {
+            $student = User::find($selectedUserId);
+            if ($student) {
+                $fileName .= '_for_' . Str::slug($student->name);
+            }
+        }
+        
+        $fileName .= '_' . now()->format('Y-m-d') . '.xlsx';
+        
+        return Excel::download(new StudentReportExport($selectedCourseId, $selectedModuleId, $selectedUserId), $fileName);
     }
 }

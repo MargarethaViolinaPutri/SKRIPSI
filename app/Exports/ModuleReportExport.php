@@ -48,8 +48,8 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
     {
         $dbDriver = DB::connection()->getDriverName();
         $timeSpentExpression = ($dbDriver === 'mysql')
-            ? 'SUM(TIMESTAMPDIFF(SECOND, a.started_at, a.finished_at))'
-            : 'SUM(EXTRACT(EPOCH FROM (a.finished_at - a.started_at)))';
+            ? 'SUM(ABS(TIMESTAMPDIFF(SECOND, a.started_at, a.finished_at)))'
+            : 'SUM(ABS(EXTRACT(EPOCH FROM (a.finished_at - a.started_at))))';
 
         $query = DB::table('users as u')
             ->join('course_user as cu', 'u.id', '=', 'cu.user_id')
