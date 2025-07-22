@@ -3,7 +3,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Ruler, Settings } from 'lucide-react';
+import { LayoutGrid, Ruler } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppLogo from './app-logo';
 
@@ -34,6 +34,37 @@ const master: NavItem = {
             title: 'User',
             icon: LayoutGrid,
             href: route('master.user.index'),
+        },
+        {
+            title: 'Test',
+            icon: LayoutGrid,
+            href: route('master.test.index'),
+        },
+    ],
+};
+
+const teacher: NavItem = {
+    title: 'Teacher',
+    children: [
+        {
+            title: 'Class Room',
+            icon: LayoutGrid,
+            href: route('master.classroom.index'),
+        },
+        {
+            title: 'Course',
+            icon: LayoutGrid,
+            href: route('master.course.index'),
+        },
+        {
+            title: 'Module',
+            icon: LayoutGrid,
+            href: route('master.module.index'),
+        },
+        {
+            title: 'Question',
+            icon: LayoutGrid,
+            href: route('master.question.index'),
         },
         {
             title: 'Test',
@@ -75,31 +106,15 @@ const operational: NavItem = {
     ],
 };
 
-const setting: NavItem = {
-    title: 'Setting',
-    children: [
-        {
-            title: 'System Setting',
-            icon: Settings,
-            href: route('setting.system.index'),
-        },
-        {
-            title: 'Level Setting',
-            icon: Settings,
-            href: '',
-        },
-    ],
-};
-
 export function AppSidebar() {
     const { role } = usePage<SharedData>().props.auth;
 
     let navigation: NavItem[] = [];
 
     if (role === 'admin') {
-        navigation = [master, report, setting];
+        navigation = [master, report];
     } else if (role === 'teacher') {
-        navigation = [master, report, operational];
+        navigation = [teacher, report];
     } else if (role === 'student') {
         navigation = [operational];
     }
