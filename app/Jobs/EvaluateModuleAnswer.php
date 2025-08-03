@@ -41,6 +41,23 @@ class EvaluateModuleAnswer implements ShouldQueue
 
         $totalScore = ($scores['structure_score'] * 0.7) + ($scores['output_accuracy_score'] * 0.3);
 
+        $blank_results = [];
+        try {
+            $pattern = '/'. str_replace('____', '(.*?)', preg_quote($question->code, '/')) .'/s';
+
+            preg_match($pattern, $this->studentCode, $studentMatches);
+            preg_match($pattern, $question->test, $correctMatches);
+
+            if (count($studentMatches) === count($correctMatches)) {
+                for ($i = 1; $i < count($correctMatches); $i++) {
+                    $blank_results[] = (trim($studentMatches[$i]) === trim($correctMatches[$i]));
+                }
+            }
+        } catch (\Exception $e) {
+            $blankCount = substr_count($question->code, '____');
+            $blank_results = array_fill(0, $blankCount, false);
+        }
+
         return Answer::create([
             'question_id'           => $this->questionId,
             'user_id'               => $this->userId,
@@ -49,6 +66,8 @@ class EvaluateModuleAnswer implements ShouldQueue
             'output_accuracy_score' => $scores['output_accuracy_score'],
             'structure_score'       => $scores['structure_score'],
             'total_score'           => $totalScore,
+            'execution_output'      => $scores['output'],
+            'blank_results'         => $blank_results,
             'started_at'            => $this->startTime,
             'finished_at'           => $this->endTime,
         ]);

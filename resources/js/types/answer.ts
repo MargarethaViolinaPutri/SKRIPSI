@@ -10,4 +10,6 @@ export type Answer = Entity & {
     student_code: string;
     user?: User;
     question?: Question;
+    blank_results?: boolean[] | null;
+    execution_output?: string | null;
 }

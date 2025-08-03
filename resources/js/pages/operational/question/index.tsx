@@ -1,20 +1,77 @@
+import AnswerPreview from '@/components/AnswerPreview';
 import NextTable from '@/components/next-table';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AppLayout from '@/layouts/app-layout';
+import { Answer } from '@/types/answer';
 import { Base } from '@/types/base';
 import { Module } from '@/types/module';
 import { Question } from '@/types/question';
 import { Link } from '@inertiajs/react';
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table';
 import axios from 'axios';
-import { Eye, Book, Terminal, ChevronRight } from 'lucide-react';
+import { Eye, Book, Terminal, ChevronRight, AlertTriangle, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
     module: Module;
 }
 
 export default function QuestionIndex({ module }: Props) {
+    const [previewData, setPreviewData] = useState<{ question: Question; answer: Answer } | null>(null);
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
+    const handlePreviewClick = async (answerId: number) => {
+        setIsPreviewLoading(true);
+        setPreviewData({} as any); 
+
+        try {
+            const response = await axios.get(route('operational.question.answers.preview', { answer: answerId }));
+            const answerData = response.data;
+            const questionData = response.data.question;
+
+            let finalResults = answerData.blank_results;
+
+            if (!finalResults || finalResults.length === 0) {
+                const studentBlanks = extractBlankAnswers(questionData.code, answerData.student_code);
+                const correctBlanks = extractBlankAnswers(questionData.code, questionData.test);
+                
+                finalResults = studentBlanks.map((studentAnswer, index) => {
+                    return studentAnswer === correctBlanks[index];
+                });
+            }
+
+            setPreviewData({
+                question: questionData,
+                answer: { ...answerData, blank_results: finalResults },
+            });
+        } catch (error) {
+            console.error("Failed to fetch preview data:", error);
+            setPreviewData(null);
+            alert('Could not load preview data.');
+        } finally {
+            setIsPreviewLoading(false);
+        }
+    };
+
+    const extractBlankAnswers = (codeTemplate: string, fullCode: string): string[] => {
+        if (!codeTemplate || !fullCode) return [];
+        try {
+            const pattern = new RegExp(
+                codeTemplate.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace(/____/g, '(.*?)'), 's'
+            );
+            const matches = fullCode.match(pattern);
+            if (matches) {
+                return matches.slice(1).map(match => match.trim());
+            }
+            const blankCount = (codeTemplate.match(/____/g) || []).length;
+            return Array(blankCount).fill('');
+        } catch (e) {
+            return [];
+        }
+    };
+
     const loadQuestions = async (params: Record<string, unknown>) => {
         const queryParams = {
             ...params,
@@ -144,6 +201,7 @@ export default function QuestionIndex({ module }: Props) {
             id: 'actions',
             header: 'Actions',
             cell: ({ row }) => {
+                const latestAnswer = row.original.user_answer;
                 return (
                     <div className="flex">
                         <Link href={route('operational.question.solve', { id: row.original.id })}>
@@ -156,6 +214,18 @@ export default function QuestionIndex({ module }: Props) {
                                 Solve Question
                             </Button>
                         </Link>
+
+                        {latestAnswer && (
+                            <Button 
+                                variant="outline"
+                                size="sm"
+                                className="transition-all duration-200 ease-in-out hover:bg-primary hover:text-white hover:-translate-y-1 hover:scale-105"
+                                onClick={() => handlePreviewClick(latestAnswer.id)}
+                            >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preview
+                            </Button>
+                        )}
                     </div>
                 );
             },
@@ -164,6 +234,52 @@ export default function QuestionIndex({ module }: Props) {
 
     return (
         <div>
+            <Dialog open={previewData !== null} onOpenChange={() => setPreviewData(null)}>
+                <DialogContent className="sm:max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle>Answer Preview: {previewData?.question?.name || 'Loading...'}</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 min-h-[200px] flex flex-col items-center justify-center">
+                        {isPreviewLoading ? (
+                            <div className="text-center">
+                                <Loader2 className="mx-auto h-12 w-12 animate-spin text-gray-500" />
+                                <p className="mt-2 text-gray-500">Loading Preview...</p>
+                            </div>
+                        ) : (
+                            <div className="w-full">
+                                {previewData?.question?.code ? (
+                                    <AnswerPreview
+                                        codeTemplate={previewData.question.code}
+                                        studentAnswers={extractBlankAnswers(previewData.question.code, previewData.answer?.student_code || '')}
+                                        results={previewData.answer?.blank_results || []}
+                                    />
+                                ) : (
+                                    <div className="text-center p-8 border-2 border-dashed border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                                        <AlertTriangle className="mx-auto h-12 w-12 text-yellow-500" />
+                                        <h3 className="mt-4 text-lg font-semibold text-yellow-800 dark:text-yellow-200">Preview Unavailable</h3>
+                                        <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
+                                            The question template is missing for this question.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {previewData?.answer && (
+                                    <div className="mt-6 pt-4 border-t w-full">
+                                        <h4 className="font-semibold mb-2 text-lg">Execution Output</h4>
+                                        <pre className="bg-black text-white p-4 rounded-md text-sm whitespace-pre-wrap max-h-48 overflow-y-auto">
+                                            {previewData.answer.execution_output || 'No output was captured during execution.'}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={() => setPreviewData(null)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
                 <Link href={route('operational.lms.index')} className="hover:underline">Courses</Link>
                 <ChevronRight className="h-4 w-4" />

@@ -44,11 +44,12 @@ class PythonEvaluationService
             return [
                 'output_accuracy_score' => $scores['output_accuracy_score'] ?? 0.0,
                 'structure_score' => $scores['structure_score'] ?? 0.0,
+                'output' => $scores['output'] ?? '',
             ];
 
         } catch (ProcessFailedException $e) {
             Log::error('PYTHON EVALUATION FAILED: ' . $e->getMessage());
-            return ['output_accuracy_score' => 0.0, 'structure_score' => 0.0];
+            return ['output_accuracy_score' => 0.0, 'structure_score' => 0.0, 'output' => 'Execution failed: ' . $e->getMessage(),];
         } finally {
             File::deleteDirectory($evalPath);
         }
@@ -125,7 +126,8 @@ class PythonEvaluationService
 
             final_result = {
                 "output_accuracy_score": round(output_score, 2),
-                "structure_score": round(structure_score, 2)
+                "structure_score": round(structure_score, 2),
+                "output": student_output
             }
             print(json.dumps(final_result))
 
