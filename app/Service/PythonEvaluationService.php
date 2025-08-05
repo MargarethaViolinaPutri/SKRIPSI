@@ -44,11 +44,12 @@ class PythonEvaluationService
             return [
                 'output_accuracy_score' => $scores['output_accuracy_score'] ?? 0.0,
                 'structure_score' => $scores['structure_score'] ?? 0.0,
+                'output' => $scores['output'] ?? '',
             ];
 
         } catch (ProcessFailedException $e) {
             Log::error('PYTHON EVALUATION FAILED: ' . $e->getMessage());
-            return ['output_accuracy_score' => 0.0, 'structure_score' => 0.0];
+            return ['output_accuracy_score' => 0.0, 'structure_score' => 0.0, 'output' => 'Execution failed: ' . $e->getMessage(),];
         } finally {
             File::deleteDirectory($evalPath);
         }
@@ -60,16 +61,16 @@ class PythonEvaluationService
     private function getPlainEvaluatorCode(): string
     {
         return <<<'PYTHON'
-        import sys        # Membaca argumen CLI.
-        import subprocess # Untuk mengeksekusi file Python.
-        import ast        # AST
-        import json       # Mengembalikan hasil evaluasi dalam format JSON
+        import sys
+        import subprocess
+        import ast
+        import json
 
         def normalize_output(output: str) -> str:
             # Normalize output by stripping whitespace and converting to lowercase
             return output.strip().lower()
 
-        def run_code(path: str) -> str: ## Fungsi untuk menjalankan file Python dan mengembalikan output-nya
+        def run_code(path: str) -> str:
             try:
                 result = subprocess.run(
                     [sys.executable, path],
@@ -87,31 +88,31 @@ class PythonEvaluationService
             except Exception as e:
                 return f"__error__: An unexpected error occurred: {e}"
 
-        def get_ast_structure(path: str) -> list: ## Fungsi untuk membentuk struktur AST dari file Python:
+        def get_ast_structure(path: str) -> list:
             try:
                 with open(path, 'r', encoding='utf-8') as f:
                     source = f.read()
-                return [type(node).__name__ for node in ast.walk(ast.parse(source))] ## Menjelajah seluruh Node
+                return [type(node).__name__ for node in ast.walk(ast.parse(source))]
             except Exception:
                 return []
 
-        def main(): ## Fungsi utama evaluator
+        def main():
             if len(sys.argv) != 3:
                 print(json.dumps({"error": "Invalid arguments. Expected student_path and reference_path."}))
                 sys.exit(1)
 
-            student_path = sys.argv[1]   ## student_path → file jawaban siswa
-            reference_path = sys.argv[2] ## reference_path → file kunci jawaban (referensi)
+            student_path = sys.argv[1]
+            reference_path = sys.argv[2]
 
             # calculate output score
-            student_output = run_code(student_path) ##  Jalankan file untuk bandingkan output:
-            reference_output = run_code(reference_path)  
+            student_output = run_code(student_path)
+            reference_output = run_code(reference_path)
 
             output_score = 0.0
             if not student_output.startswith("__error__") and student_output == reference_output:
-                output_score = 100.0 ## Jika sama persis output score 100
+                output_score = 100.0
 
-            # calculate structure score ## Analisis AST struktur
+            # calculate structure score
             struct_student = get_ast_structure(student_path)
             struct_ref = get_ast_structure(reference_path)
 
@@ -121,13 +122,14 @@ class PythonEvaluationService
                 common = set_a.intersection(set_b)
                 total = set_a.union(set_b)
                 if total:
-                    structure_score = (len(common) / len(total)) * 100 ##Gunakan Jaccard Similarity
+                    structure_score = (len(common) / len(total)) * 100
 
             final_result = {
                 "output_accuracy_score": round(output_score, 2),
-                "structure_score": round(structure_score, 2)
+                "structure_score": round(structure_score, 2),
+                "output": student_output
             }
-            print(json.dumps(final_result)) ##Kembalikan skor dalam bentuk JSON (desimal 2 angka blkng koma)
+            print(json.dumps(final_result))
 
         if __name__ == "__main__":
             main()

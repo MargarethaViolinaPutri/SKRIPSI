@@ -7,10 +7,12 @@ use App\Contract\Operational\QuestionContract;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QuestionRequest;
 use App\Http\Requests\StoreFibRequest;
+use App\Models\Answer;
 use App\Models\Question;
 use App\Service\Operational\ModuleService;
 use App\Utils\WebResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Spatie\QueryBuilder\AllowedFilter;
@@ -75,6 +77,7 @@ class QuestionController extends Controller
                 'user_answers_count' => $question->user_answers_count,
                 
                 'user_answer' => $latestAnswer ? [
+                    'id' => $latestAnswer->id,
                     'total_score' => (float) $latestAnswer->total_score,
                     'time_spent_in_seconds' => $latestAnswer->time_spent_in_seconds,
                 ] : null,
@@ -116,5 +119,16 @@ class QuestionController extends Controller
         return Inertia::render('operational/question/solve', [
             'question' => $questionDataForStudent
         ]);
+    }
+
+    public function preview(Answer $answer)
+    {
+        if (Auth::id() !== $answer->user_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $answer->load('question');
+
+        return response()->json($answer);
     }
 }
