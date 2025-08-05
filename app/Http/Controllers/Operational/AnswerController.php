@@ -24,6 +24,7 @@ class AnswerController extends Controller
      * @param  int  $questionId
      * @return \Illuminate\Http\Response
      */
+    // validasi input, ada 3 input yg di terima dari FE (student code, start time, end_time)
     public function evaluateAnswer(Request $request, int $questionId)
     {
         $validated = $request->validate([
@@ -31,7 +32,7 @@ class AnswerController extends Controller
             'start_time' => 'required|date_format:Y-m-d H:i:s',
             'end_time' => 'required|date_format:Y-m-d H:i:s',
         ]);
-
+// abis validasi disini bakal dikriim ke job untuk dimasukkan dalam antrian
         try {
             $answer = EvaluateModuleAnswer::dispatch(
                 $questionId,

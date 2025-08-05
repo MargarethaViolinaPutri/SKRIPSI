@@ -60,16 +60,16 @@ class PythonEvaluationService
     private function getPlainEvaluatorCode(): string
     {
         return <<<'PYTHON'
-        import sys
-        import subprocess
-        import ast
-        import json
+        import sys        # Membaca argumen CLI.
+        import subprocess # Untuk mengeksekusi file Python.
+        import ast        # AST
+        import json       # Mengembalikan hasil evaluasi dalam format JSON
 
         def normalize_output(output: str) -> str:
             # Normalize output by stripping whitespace and converting to lowercase
             return output.strip().lower()
 
-        def run_code(path: str) -> str:
+        def run_code(path: str) -> str: ## Fungsi untuk menjalankan file Python dan mengembalikan output-nya
             try:
                 result = subprocess.run(
                     [sys.executable, path],
@@ -87,31 +87,31 @@ class PythonEvaluationService
             except Exception as e:
                 return f"__error__: An unexpected error occurred: {e}"
 
-        def get_ast_structure(path: str) -> list:
+        def get_ast_structure(path: str) -> list: ## Fungsi untuk membentuk struktur AST dari file Python:
             try:
                 with open(path, 'r', encoding='utf-8') as f:
                     source = f.read()
-                return [type(node).__name__ for node in ast.walk(ast.parse(source))]
+                return [type(node).__name__ for node in ast.walk(ast.parse(source))] ## Menjelajah seluruh Node
             except Exception:
                 return []
 
-        def main():
+        def main(): ## Fungsi utama evaluator
             if len(sys.argv) != 3:
                 print(json.dumps({"error": "Invalid arguments. Expected student_path and reference_path."}))
                 sys.exit(1)
 
-            student_path = sys.argv[1]
-            reference_path = sys.argv[2]
+            student_path = sys.argv[1]   ## student_path → file jawaban siswa
+            reference_path = sys.argv[2] ## reference_path → file kunci jawaban (referensi)
 
             # calculate output score
-            student_output = run_code(student_path)
-            reference_output = run_code(reference_path)
+            student_output = run_code(student_path) ##  Jalankan file untuk bandingkan output:
+            reference_output = run_code(reference_path)  
 
             output_score = 0.0
             if not student_output.startswith("__error__") and student_output == reference_output:
-                output_score = 100.0
+                output_score = 100.0 ## Jika sama persis output score 100
 
-            # calculate structure score
+            # calculate structure score ## Analisis AST struktur
             struct_student = get_ast_structure(student_path)
             struct_ref = get_ast_structure(reference_path)
 
@@ -121,13 +121,13 @@ class PythonEvaluationService
                 common = set_a.intersection(set_b)
                 total = set_a.union(set_b)
                 if total:
-                    structure_score = (len(common) / len(total)) * 100
+                    structure_score = (len(common) / len(total)) * 100 ##Gunakan Jaccard Similarity
 
             final_result = {
                 "output_accuracy_score": round(output_score, 2),
                 "structure_score": round(structure_score, 2)
             }
-            print(json.dumps(final_result))
+            print(json.dumps(final_result)) ##Kembalikan skor dalam bentuk JSON (desimal 2 angka blkng koma)
 
         if __name__ == "__main__":
             main()

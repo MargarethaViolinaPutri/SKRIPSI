@@ -20,13 +20,14 @@ class ReportController extends Controller
     public function testReport(Request $request)
     {
         $courses = Course::orderBy('name')->get(['id', 'name']);
-        
+ // Mengambil data berdasarkan filter:       
         $filters = $request->only(['course_id', 'name', 'class_group']);
-        
+
         $selectedCourseId = ($filters['course_id'] ?? null) && $filters['course_id'] !== 'all' ? (int)$filters['course_id'] : null;
         $searchTerm = $filters['name'] ?? null;
         $selectedGroup = ($filters['class_group'] ?? null) && $filters['class_group'] !== 'all' ? $filters['class_group'] : null;
-
+// Ambil data menggunakan TestReportExport()->collection() langsung (tanpa Excel download).
+// Kirim ke tampilan report/test.
         $reportData = (new TestReportExport($selectedCourseId, $searchTerm, $selectedGroup))->collection();
         
         return Inertia::render('report/test', [
@@ -35,7 +36,8 @@ class ReportController extends Controller
             'filters' => $filters,
         ]);
     }
-
+// Mengekspor data hasil tes ke Excel.
+// Gunakan class TestReportExport sesuai filter yang dipilih.
     public function exportTestReport(Request $request)
     {
         $selectedCourseId = $request->input('course_id') && $request->input('course_id') !== 'all' ? (int)$request->input('course_id') : null;
@@ -46,7 +48,7 @@ class ReportController extends Controller
         
         return Excel::download(new TestReportExport($selectedCourseId, $searchTerm, $selectedGroup), $fileName);
     }
-
+// Jika course_id tidak dipilih → tidak ambil data (menghindari query berat
     public function moduleReport(Request $request)
     {
         $courses = Course::orderBy('name')->get(['id', 'name']);
@@ -55,10 +57,10 @@ class ReportController extends Controller
         $selectedCourseId = ($filters['course_id'] ?? null) && $filters['course_id'] !== 'all' ? (int)$filters['course_id'] : null;
         $searchTerm = $filters['name'] ?? null;
         $selectedGroup = ($filters['class_group'] ?? null) && $filters['class_group'] !== 'all' ? $filters['class_group'] : null;
-
+// Jika course_id tidak dipilih → tidak ambil data (menghindari query berat)
         $reportData = $selectedCourseId 
             ? (new ModuleReportExport($selectedCourseId, $searchTerm, $selectedGroup))->collection()
-            : collect();
+            : collect(); // jika ga ad collect kosong
         
         return Inertia::render('report/module', [
             'reportData' => $reportData,

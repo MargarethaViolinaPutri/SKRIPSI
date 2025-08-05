@@ -17,7 +17,7 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
     protected ?int $courseId;
     protected ?string $name;
     protected ?string $classGroup;
-
+// Menerima parameter filter: 
     public function __construct(?int $courseId, ?string $name, ?string $classGroup)
     {
         $this->courseId = $courseId;
@@ -44,7 +44,7 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
     /**
      * @return \Illuminate\Support\Collection
      */
-    public function collection()
+    public function collection() // Mengambil data performa siswa dari database.
     {
         $dbDriver = DB::connection()->getDriverName();
         $timeSpentExpression = ($dbDriver === 'mysql')
@@ -60,8 +60,8 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
             ->select(
                 'u.name as student_name',
                 'cu.class_group',
-                DB::raw('AVG(a.total_score) as average_score'),
-                DB::raw('COUNT(a.id) as total_attempts'),
+                DB::raw('AVG(a.total_score) as average_score'), // nilai rata-rata siswa.
+                DB::raw('COUNT(a.id) as total_attempts'), // berapa banyak soal yang dijawab (total_attempts).
                 DB::raw($timeSpentExpression . ' as total_time_spent_seconds')
             )
             ->groupBy('u.id', 'u.name', 'cu.class_group');
@@ -81,7 +81,7 @@ class ModuleReportExport implements FromCollection, WithHeadings, WithMapping, W
     *
     * @return array
     */
-    public function map($row): array
+    public function map($row): array // Mengatur bagaimana data ditampilkan per baris di file Excel.
     {
         return [
             $row->student_name,

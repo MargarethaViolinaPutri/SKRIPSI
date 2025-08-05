@@ -54,9 +54,10 @@ class GformAnswersImport implements ToCollection, WithChunkReading
                     Log::warning('GFORM IMPORT: User not found with email: ' . $email);
                     continue;
                 }
-
+// start kolom ke 5 
+// tiap question ada 3 inputan (time start, jawaban, time end)
                 foreach ($questions as $index => $question) {
-                    $startColumnIndex = 5 + ($index * 3);
+                    $startColumnIndex = 5 + ($index * 3); // di foreach jadi indexnya +3+3 terus
                     $answerColumnIndex = $startColumnIndex + 1;
                     $finishColumnIndex = $startColumnIndex + 2;
 

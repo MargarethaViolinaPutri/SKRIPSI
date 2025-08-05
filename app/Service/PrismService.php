@@ -11,12 +11,15 @@ class PrismService
 {
     protected $maxRetries = 3;
     protected $retryDelay = 3000; // milliseconds
-
+// dengan berbagai parameter: tring berisi kode Python dari user
+// Menentukan tipe FIB (single untuk 1 soal, multiple untuk banyak)
+// Menentukan nomor awal soal (default 1)
     public function generateQuestions(string $code, ?string $type = null, int $startNumber = 1): array
     {
-        // Check for delimiter '#' to split questions
+        // Check for delimiter '#' to split questions 
+        // # → jika ada, berarti input terdiri dari beberapa blok soal → loop per blok.
         if (strpos($code, '#') !== false) {
-            $blocks = preg_split('/^#.*$/m', $code, -1, PREG_SPLIT_NO_EMPTY);
+            $blocks = preg_split('/^#.*$/m', $code, -1, PREG_SPLIT_NO_EMPTY); // Memecah satu teks besar menjadi beberapa blok kode. Setiap blok dianggap 1 soal
             $questions = [];
             $questionNumber = $startNumber;
 

@@ -126,7 +126,7 @@ class ModuleController extends Controller
         $data = $this->service->destroy($id);
         return WebResponse::response($data, 'master.module.index');
     }
-
+// Menampilkan semua jawaban siswa dari Google Form (yang diimpor) terkait dengan modul tersebut.
     public function showGformImport(Request $request, Module $module)
     {
         $sortBy = $request->input('sort_by', 'question.name');
@@ -152,7 +152,7 @@ class ModuleController extends Controller
             'filters' => $request->only(['sort_by', 'order']),
         ]);
     }
-
+// Memungkinkan guru mengubah skor jawaban GForm satu per satu secara manual.
     public function updateGformScore(GformScoreRequest $request, Answer $answer)
     {
         $answer->update($request->validated());

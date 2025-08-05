@@ -68,14 +68,14 @@ class CourseController extends Controller
         );
         return WebResponse::response($data, 'master.course.index');
     }
-
+// Menyediakan semua data yang dibutuhkan untuk menentukan threshold pemisahan siswa.
     public function threshold($id)
     {
         $data = $this->service->find($id);
-        $averageData = $this->service->getAverageScoreAndStudentCount($id);
+        $averageData = $this->service->getAverageScoreAndStudentCount($id); // nilai rata-rata pre-test
         $testProgress = $this->service->getTestProgress($id);
-        $studentTestDetails = $this->service->getStudentTestDetails($id);
-        $stratumGroupCounts = $this->service->getStratumGroupCounts($id);
+        $studentTestDetails = $this->service->getStudentTestDetails($id); // menampilkan skor tiap siswa
+        $stratumGroupCounts = $this->service->getStratumGroupCounts($id); // melihat berapa banyak siswa di bawah dan di atas threshold
         return Inertia::render('master/course/threshold', [
             'course' => $data,
             'averageData' => $averageData,
@@ -96,12 +96,14 @@ class CourseController extends Controller
 
         if ($updateSuccess) {
             $course = $this->service->find($id);
-            $this->service->classifyStudentsByThreshold($course);
+            $this->service->classifyStudentsByThreshold($course); // Menyimpan nilai threshold ke database. Langsung memicu pemisahan siswa berdasarkan nilai pre-test.
+        // Fungsi classifyStudentsByThreshold() akan menandai siswa sebagai experiment atau control.
         }
 
         return WebResponse::response($updateSuccess, 'master.course.index');
     }
-
+// Mendukung dokumentasi penelitian atau report.
+// Ekspor data klasifikasi siswa menjadi file .xlsx.
     public function exportThresholdData(Course $course)
     {
         $fileName = 'classification_report_' . Str::slug($course->name) . '_' . now()->format('Y-m-d') . '.xlsx';
@@ -115,3 +117,4 @@ class CourseController extends Controller
         return WebResponse::response($data, 'master.course.index');
     }
 }
+// Fungsi store, update, destroy – CRUD Course
